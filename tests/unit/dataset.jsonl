@@ -1,0 +1,6 @@
+{"schema_version":1,"tool_name":"get_weather","arguments":{"city":"Porto"},"request":{"jsonrpc":"2.0","id":"1","method":"tools/call","params":{"name":"get_weather","arguments":{"city":"Porto"}}}}
+{"schema_version":1,"tool_name":"get_weather","arguments":{"city":"Lisbon"},"request":{"jsonrpc":"2.0","id":"2","method":"tools/call","params":{"name":"get_weather","arguments":{"city":"Lisbon"}}}}
+{"schema_version":1,"tool_name":"add","arguments":{"a":3,"b":5},"request":{"jsonrpc":"2.0","id":"3","method":"tools/call","params":{"name":"add","arguments":{"a":3,"b":5}}}}
+{"schema_version":1,"tool_name":"add","arguments":{"a":10,"b":20},"request":{"jsonrpc":"2.0","id":"4","method":"tools/call","params":{"name":"add","arguments":{"a":10,"b":20}}}}
+{"schema_version":1,"tool_name":"send_email","arguments":{"to":"alice@example.com","subject":"Hello","body":"Test message"},"request":{"jsonrpc":"2.0","id":"5","method":"tools/call","params":{"name":"send_email","arguments":{"to":"alice@example.com","subject":"Hello","body":"Test message"}}}}
+
