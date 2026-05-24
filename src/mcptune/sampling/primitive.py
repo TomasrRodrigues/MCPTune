@@ -5,6 +5,9 @@ from .base import ArgumentSampler
 
 
 class PrimitiveSampler(ArgumentSampler):
+    def __init__(self, rng: random.Random | None = None):
+        self.rng = rng or random.Random()
+
     def sample(self, schema: dict):
 
         t = schema.get("type")
@@ -13,15 +16,15 @@ class PrimitiveSampler(ArgumentSampler):
             return self._string(schema)
 
         if t == "integer":
-            return random.randint(0, 100)
+            return self.rng.randint(0, 100)
 
         if t == "number":
-            return random.uniform(0, 100)
+            return self.rng.uniform(0, 100)
 
         if t == "boolean":
-            return random.choice([True, False])
+            return self.rng.choice([True, False])
 
         return None
 
     def _string(self, schema):
-        return "".join(random.choices(string.ascii_lowercase, k=8))
+        return "".join(self.rng.choices(string.ascii_lowercase, k=8))

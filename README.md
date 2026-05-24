@@ -58,7 +58,7 @@ def get_weather(city: str) -> str:
     return f"Sunny in {city}"
 
 async def main():
-    tuner = MCPTune(model="demo-model", mcpserver=server)
+    tuner = MCPTune(model="demo-model", mcpserver=server, seed=42)
     tools = await tuner.discover()
     dataset = tuner.build_dataset(tools)
     for row in dataset:
@@ -66,6 +66,8 @@ async def main():
 
 asyncio.run(main())
 ​```
+
+Pass `seed=` when you need repeatable primitive/recursive sampler output for regression tests or dataset versioning. LLM-backed samplers are best-effort reproducible because providers may still be non-deterministic even when temperature and provider seeds are fixed.
 
 ## How it's built
 
