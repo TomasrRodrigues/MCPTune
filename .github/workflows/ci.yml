@@ -20,6 +20,19 @@ jobs:
       - name: Ruff format check
         run: ruff format --check src tests
 
+  type-check:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Mypy check
+        run: mypy src/mcptune
+
   test:
     runs-on: ubuntu-latest
     strategy:

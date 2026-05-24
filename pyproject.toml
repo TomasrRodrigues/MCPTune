@@ -57,6 +57,10 @@ ignore = [
 "__init__.py" = ["F401", "F403", "F405"]
 "tests/*"     = ["B011"]
 
+[tool.mypy]
+ignore_missing_imports = true
+strict_optional = true
+
 [tool.coverage.run]
 source = ["src/mcptune"]
 branch = true
