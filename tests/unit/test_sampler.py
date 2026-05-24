@@ -1,4 +1,8 @@
+import random
+
 import pytest
+
+from mcptune.sampling.primitive import PrimitiveSampler
 
 
 @pytest.mark.unit
@@ -27,3 +31,20 @@ def test_unknown_type_returns_none(primitive_sampler):
     # than raising. Issue 6 (recursive sampling) may revisit this.
     assert primitive_sampler.sample({"type": "object"}) is None
     assert primitive_sampler.sample({}) is None
+
+
+@pytest.mark.unit
+def test_seeded_primitive_sampler_is_reproducible():
+    schemas = [
+        {"type": "string"},
+        {"type": "integer"},
+        {"type": "number"},
+        {"type": "boolean"},
+    ]
+
+    first = PrimitiveSampler(random.Random(42))
+    second = PrimitiveSampler(random.Random(42))
+
+    assert [first.sample(schema) for schema in schemas] == [
+        second.sample(schema) for schema in schemas
+    ]

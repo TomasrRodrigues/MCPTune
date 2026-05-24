@@ -40,3 +40,31 @@ def test_build_arguments_no_parameters_returns_empty():
     m = MCPTune(model="x", mcpserver=None)
 
     assert m.build_arguments(tool) == {}
+
+
+@pytest.mark.unit
+def test_seeded_dataset_build_is_reproducible_across_instances():
+    tools = [
+        ToolSpec(
+            name="weather",
+            description="",
+            parameters=[
+                ToolParameter(
+                    name="city",
+                    schema={"type": "string"},
+                    required=True,
+                    description="",
+                ),
+                ToolParameter(
+                    name="limit",
+                    schema={"type": "integer"},
+                    required=False,
+                    description="",
+                ),
+            ],
+        )
+    ]
+    first = MCPTune(model="x", mcpserver=None, seed=42)
+    second = MCPTune(model="x", mcpserver=None, seed=42)
+
+    assert first.build_dataset(tools) == second.build_dataset(tools)
