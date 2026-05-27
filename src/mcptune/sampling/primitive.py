@@ -1,7 +1,8 @@
+from .base import ArgumentSampler
+
+import re
 import random
 import string
-
-from .base import ArgumentSampler
 
 
 class PrimitiveSampler(ArgumentSampler):
