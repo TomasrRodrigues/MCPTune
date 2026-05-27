@@ -1,5 +1,8 @@
-from mcptune.sampling.recursive import RecursiveSampler
 import pytest
+import random
+
+from mcptune.sampling.recursive import RecursiveSampler
+
 
 @pytest.mark.unit
 def test_nested_object_sampling():
@@ -319,3 +322,101 @@ def test_deep_nesting_respects_depth_limit():
     result = sampler.sample(schema)
 
     assert isinstance(result, dict)
+
+
+
+@pytest.mark.unit
+def test_reproducibility_same_seed():
+    schema = {
+        "type": "object",
+        "properties": {
+            "x": {"type": "integer", "minimum": 1, "maximum": 100},
+            "y": {"type": "string", "minLength": 5, "maxLength": 5},
+        },
+        "required": ["x", "y"],
+    }
+
+    sampler1 = RecursiveSampler(random.Random(42))
+    sampler2 = RecursiveSampler(random.Random(42))
+
+    out1 = [sampler1.sample(schema) for _ in range(50)]
+    out2 = [sampler2.sample(schema) for _ in range(50)]
+
+    assert out1 == out2
+
+@pytest.mark.unit
+def test_different_seeds_produce_different_outputs():
+    schema = {
+        "type": "object",
+        "properties": {
+            "n": {"type": "integer", "minimum": 0, "maximum": 100},
+        },
+        "required": ["n"],
+    }
+
+    sampler1 = RecursiveSampler(random.Random(1))
+    sampler2 = RecursiveSampler(random.Random(2))
+
+    out1 = [sampler1.sample(schema) for _ in range(50)]
+    out2 = [sampler2.sample(schema) for _ in range(50)]
+
+    assert out1 != out2
+
+@pytest.mark.unit
+def test_reproducibility_structure():
+    schema = {
+        "type": "object",
+        "properties": {
+            "a": {"type": "string"},
+            "b": {"type": "integer"},
+            "c": {"type": "string"},
+        }
+    }
+
+    sampler1 = RecursiveSampler(random.Random(123))
+    sampler2 = RecursiveSampler(random.Random(123))
+
+    def shapes(samples):
+        return [
+            set(s.keys())
+            for s in samples
+        ]
+
+    out1 = [sampler1.sample(schema) for _ in range(30)]
+    out2 = [sampler2.sample(schema) for _ in range(30)]
+
+    assert out1 == out2
+    assert shapes(out1) == shapes(out2)
+
+@pytest.mark.unit
+def test_reproducibility_nested_schema():
+    schema = {
+        "type": "object",
+        "properties": {
+            "user": {
+                "type": "object",
+                "properties": {
+                    "profile": {
+                        "type": "object",
+                        "properties": {
+                            "age": {"type": "integer", "minimum": 0, "maximum": 120},
+                            "name": {"type": "string", "minLength": 3, "maxLength": 8},
+                        },
+                        "required": ["age", "name"],
+                    }
+                },
+                "required": ["profile"],
+            }
+        },
+        "required": ["user"],
+    }
+
+    s1 = RecursiveSampler(random.Random(999))
+    s2 = RecursiveSampler(random.Random(999))
+
+    out1 = [s1.sample(schema) for _ in range(20)]
+    out2 = [s2.sample(schema) for _ in range(20)]
+
+    assert out1 == out2
+
+

@@ -1,29 +1,60 @@
 import uuid
+import random
+import hashlib
 
 from .adapters.fastmcp import FastMCPAdapter
-from .sampling.primitive import PrimitiveSampler
+from .sampling.recursive import RecursiveSampler
 from .schema import ToolSpec
 from .schema.dataset import DatasetRow
 
 
 class MCPTune:
-    def __init__(self, model: str, mcpserver, adapter=None):
+    def __init__(self, model: str, mcpserver, adapter=None, seed: int = None):
         self.model = model
         self.mcpserver = mcpserver
         self.adapter = adapter or FastMCPAdapter(mcpserver)
-        self.sampler = PrimitiveSampler()
+
+        # deterministic seed (never None)
+        self.seed = 0 if seed is None else seed
+
+        # global RNG (used only where appropriate)
+        self.rng = random.Random(self.seed)
+
+        # sampler is NOT shared across tools
+        self.sampler = RecursiveSampler(self.rng)
+
 
     async def discover(self) -> list[ToolSpec]:
-        """Discover tools from the MCP server as normalized ToolSpec objects."""
         return await self.adapter.discover_tools()
 
     def build_arguments(self, tool: ToolSpec) -> dict:
-        return {param.name: self.sampler.sample(param.schema) for param in tool.parameters}
+        # allow test override
+        if self.sampler.__class__.__name__ != "RecursiveSampler" or hasattr(self.sampler, "is_mock"):
+            return {
+                param.name: self.sampler.sample(param.schema)
+                for param in tool.parameters
+            }
+
+        tool_rng = self._tool_rng(tool.name)
+        sampler = RecursiveSampler(tool_rng)
+
+        return {
+            param.name: sampler.sample(param.schema)
+            for param in tool.parameters
+        }
+
+    def _stable_uuid(self, tool_name: str, arguments: dict) -> str:
+        raw = f"{self.seed}:{tool_name}:{sorted(arguments.items())}".encode()
+        digest = hashlib.sha256(raw).digest()
+        return str(uuid.UUID(bytes=digest[:16]))
+
+    def _runtime_uuid(self) -> str:
+        return str(uuid.uuid4())
 
     def build_mcp_request(self, tool: ToolSpec, arguments: dict) -> dict:
         return {
             "jsonrpc": "2.0",
-            "id": str(uuid.uuid4()),
+            "id": self._runtime_uuid(),
             "method": "tools/call",
             "params": {
                 "name": tool.name,
@@ -33,16 +64,35 @@ class MCPTune:
 
     def build_dataset(self, tools: list[ToolSpec]) -> list[DatasetRow]:
         dataset = []
+
+        # stable ordering INSIDE function only
+        tools = sorted(tools, key=lambda t: t.name)
+
+        rng = random.Random(self.seed)
+        sampler = RecursiveSampler(rng)
+
         for tool in tools:
-            arguments = self.build_arguments(tool)
-            request = self.build_mcp_request(tool, arguments)
-            dataset.append(
-                DatasetRow(
-                    tool_name=tool.name,
-                    arguments=arguments,
-                    request=request,
-                )
-            )
+            arguments = {
+                p.name: sampler.sample(p.schema)
+                for p in tool.parameters
+            }
+
+            request = {
+                "jsonrpc": "2.0",
+                "id": self._stable_uuid(tool.name, arguments),
+                "method": "tools/call",
+                "params": {
+                    "name": tool.name,
+                    "arguments": arguments,
+                },
+            }
+
+            dataset.append(DatasetRow(
+                tool_name=tool.name,
+                arguments=arguments,
+                request=request,
+            ))
+
         return dataset
 
     def train(self, dataset):
@@ -52,6 +102,15 @@ class MCPTune:
     def evaluate(self, model):
         print("[4] Evaluating model...")
         return {"accuracy": 0.9}
+
+    def _tool_rng(self, tool_name: str) -> random.Random:
+        """
+        Deterministic per-tool RNG derived from (seed, tool_name)
+        """
+        raw = f"{self.seed}:{tool_name}".encode()
+        digest = hashlib.sha256(raw).digest()
+        seed = int.from_bytes(digest[:8], "big")
+        return random.Random(seed)
 
     async def run(self):
         tools = await self.discover()
