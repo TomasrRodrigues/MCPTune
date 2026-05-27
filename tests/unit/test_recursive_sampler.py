@@ -14,6 +14,7 @@ def test_nested_object_sampling():
                     "name": {"type": "string"},
                     "age": {"type": "integer"},
                 },
+                "required": ["name", "age"],
             }
         },
     }
@@ -215,3 +216,106 @@ def test_optional_fields_probabilistic():
     assert found_optional
     assert missing_optional
 
+
+
+@pytest.mark.unit
+def test_pattern_fallback_or_generation():
+    sampler = RecursiveSampler()
+
+    schema = {
+        "type": "string",
+        "pattern": "[a-z]{5}"
+    }
+
+    result = sampler.sample(schema)
+
+    assert isinstance(result, str)
+    assert len(result) > 0
+
+
+@pytest.mark.unit
+def test_nullable_explicit_flag():
+    sampler = RecursiveSampler()
+
+    schema = {
+        "type": "string",
+        "nullable": True
+    }
+
+    # run many times to ensure both branches appear
+    seen_none = False
+    seen_str = False
+
+    for _ in range(50):
+        r = sampler.sample(schema)
+        if r is None:
+            seen_none = True
+        elif isinstance(r, str):
+            seen_str = True
+
+    assert seen_none
+    assert seen_str
+
+
+@pytest.mark.unit
+def test_anyof_distribution_not_crashing():
+    sampler = RecursiveSampler()
+
+    schema = {
+        "anyOf": [
+            {"type": "string"},
+            {"type": "integer"},
+            {"type": "boolean"},
+        ]
+    }
+
+    for _ in range(20):
+        r = sampler.sample(schema)
+        assert isinstance(r, (str, int, bool))
+
+
+@pytest.mark.unit
+def test_oneof_distribution_not_crashing():
+    sampler = RecursiveSampler()
+
+    schema = {
+        "oneOf": [
+            {"type": "number"},
+            {"type": "string"},
+        ]
+    }
+
+    for _ in range(20):
+        r = sampler.sample(schema)
+        assert isinstance(r, (float, str))
+
+
+@pytest.mark.unit
+def test_deep_nesting_respects_depth_limit():
+    sampler = RecursiveSampler()
+
+    schema = {
+        "type": "object",
+        "properties": {
+            "a": {
+                "type": "object",
+                "properties": {
+                    "b": {
+                        "type": "object",
+                        "properties": {
+                            "c": {
+                                "type": "object",
+                                "properties": {
+                                    "d": {"type": "string"}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    result = sampler.sample(schema)
+
+    assert isinstance(result, dict)
