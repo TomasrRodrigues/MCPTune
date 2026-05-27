@@ -1,6 +1,7 @@
+import random
+
 from .base import ArgumentSampler
 from .primitive import PrimitiveSampler
-import random
 
 
 class RecursiveSampler(ArgumentSampler):

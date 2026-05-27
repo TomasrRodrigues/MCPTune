@@ -1,8 +1,7 @@
-from .base import ArgumentSampler
-
-import re
 import random
 import string
+
+from .base import ArgumentSampler
 
 
 class PrimitiveSampler(ArgumentSampler):
@@ -65,6 +64,7 @@ class PrimitiveSampler(ArgumentSampler):
             max_v = min_v + 100.0
 
         return self.rng.uniform(min_v, max_v)
+    #
 
     def _email(self):
         user = "".join(self.rng.choices(string.ascii_lowercase, k=6))

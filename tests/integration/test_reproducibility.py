@@ -1,7 +1,7 @@
 import pytest
 
 from mcptune import MCPTune
-from mcptune.schema import ToolSpec, ToolParameter
+from mcptune.schema import ToolParameter, ToolSpec
 
 
 @pytest.mark.unit
