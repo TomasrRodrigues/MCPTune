@@ -35,6 +35,7 @@ def test_nested_object_sampling():
     assert isinstance(result["user"]["name"], str)
     assert isinstance(result["user"]["age"], int)
 
+
 @pytest.mark.unit
 def test_array_sampling():
     sampler = RecursiveSampler()
@@ -60,9 +61,7 @@ def test_array_sampling():
 def test_enum_sampling():
     sampler = RecursiveSampler()
 
-    schema = {
-        "enum": ["red", "green", "blue"]
-    }
+    schema = {"enum": ["red", "green", "blue"]}
 
     result = sampler.sample(schema)
 
@@ -73,9 +72,7 @@ def test_enum_sampling():
 def test_nullable_sampling():
     sampler = RecursiveSampler()
 
-    schema = {
-        "type": ["string", "null"]
-    }
+    schema = {"type": ["string", "null"]}
 
     result = sampler.sample(schema)
 
@@ -131,10 +128,7 @@ def test_oneof_sampling():
 def test_default_value_respected():
     sampler = RecursiveSampler()
 
-    schema = {
-        "type": "string",
-        "default": "Porto"
-    }
+    schema = {"type": "string", "default": "Porto"}
 
     result = sampler.sample(schema)
 
@@ -179,10 +173,7 @@ def test_number_constraints():
 def test_email_format():
     sampler = RecursiveSampler()
 
-    schema = {
-        "type": "string",
-        "format": "email"
-    }
+    schema = {"type": "string", "format": "email"}
 
     result = sampler.sample(schema)
 
@@ -221,15 +212,11 @@ def test_optional_fields_probabilistic():
     assert missing_optional
 
 
-
 @pytest.mark.unit
 def test_pattern_fallback_or_generation():
     sampler = RecursiveSampler()
 
-    schema = {
-        "type": "string",
-        "pattern": "[a-z]{5}"
-    }
+    schema = {"type": "string", "pattern": "[a-z]{5}"}
 
     result = sampler.sample(schema)
 
@@ -241,10 +228,7 @@ def test_pattern_fallback_or_generation():
 def test_nullable_explicit_flag():
     sampler = RecursiveSampler()
 
-    schema = {
-        "type": "string",
-        "nullable": True
-    }
+    schema = {"type": "string", "nullable": True}
 
     # run many times to ensure both branches appear
     seen_none = False
@@ -307,23 +291,17 @@ def test_deep_nesting_respects_depth_limit():
                     "b": {
                         "type": "object",
                         "properties": {
-                            "c": {
-                                "type": "object",
-                                "properties": {
-                                    "d": {"type": "string"}
-                                }
-                            }
-                        }
+                            "c": {"type": "object", "properties": {"d": {"type": "string"}}}
+                        },
                     }
-                }
+                },
             }
-        }
+        },
     }
 
     result = sampler.sample(schema)
 
     assert isinstance(result, dict)
-
 
 
 @pytest.mark.unit
@@ -345,6 +323,7 @@ def test_reproducibility_same_seed():
 
     assert out1 == out2
 
+
 @pytest.mark.unit
 def test_different_seeds_produce_different_outputs():
     schema = {
@@ -363,6 +342,7 @@ def test_different_seeds_produce_different_outputs():
 
     assert out1 != out2
 
+
 @pytest.mark.unit
 def test_reproducibility_structure():
     schema = {
@@ -371,23 +351,21 @@ def test_reproducibility_structure():
             "a": {"type": "string"},
             "b": {"type": "integer"},
             "c": {"type": "string"},
-        }
+        },
     }
 
     sampler1 = RecursiveSampler(random.Random(123))
     sampler2 = RecursiveSampler(random.Random(123))
 
     def shapes(samples):
-        return [
-            set(s.keys())
-            for s in samples
-        ]
+        return [set(s.keys()) for s in samples]
 
     out1 = [sampler1.sample(schema) for _ in range(30)]
     out2 = [sampler2.sample(schema) for _ in range(30)]
 
     assert out1 == out2
     assert shapes(out1) == shapes(out2)
+
 
 @pytest.mark.unit
 def test_reproducibility_nested_schema():
@@ -419,5 +397,3 @@ def test_reproducibility_nested_schema():
     out2 = [s2.sample(schema) for _ in range(20)]
 
     assert out1 == out2
-
-

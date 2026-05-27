@@ -27,5 +27,3 @@ def test_unknown_type_returns_none(primitive_sampler):
     # than raising. Issue 6 (recursive sampling) may revisit this.
     assert primitive_sampler.sample({"type": "object"}) is None
     assert primitive_sampler.sample({}) is None
-
-

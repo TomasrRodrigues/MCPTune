@@ -10,6 +10,7 @@ from mcptune.dataset.validate import (
 # VALID CASE
 # ----------------------------
 
+
 def test_valid_dataset_row_passes():
     data = {
         "tool_name": "weather_tool",
@@ -23,6 +24,7 @@ def test_valid_dataset_row_passes():
 # ----------------------------
 # MISSING FIELD CASES
 # ----------------------------
+
 
 def test_missing_tool_name_fails():
     data = {
@@ -57,6 +59,7 @@ def test_missing_request_fails():
 # ----------------------------
 # TYPE SAFETY CASES
 # ----------------------------
+
 
 def test_tool_name_must_be_string():
     data = {
@@ -95,6 +98,7 @@ def test_request_must_be_dict():
 # OPTIONAL FIELDS (future-proofing)
 # ----------------------------
 
+
 def test_response_optional_valid_types():
     for response in [
         None,
@@ -131,19 +135,23 @@ def test_invalid_response_type_fails():
 
 def test_error_must_be_string_or_none():
     # valid
-    validate_dataset_row_dict({
-        "tool_name": "x",
-        "arguments": {},
-        "request": {},
-        "error": None,
-    })
+    validate_dataset_row_dict(
+        {
+            "tool_name": "x",
+            "arguments": {},
+            "request": {},
+            "error": None,
+        }
+    )
 
-    validate_dataset_row_dict({
-        "tool_name": "x",
-        "arguments": {},
-        "request": {},
-        "error": "something went wrong",
-    })
+    validate_dataset_row_dict(
+        {
+            "tool_name": "x",
+            "arguments": {},
+            "request": {},
+            "error": "something went wrong",
+        }
+    )
 
 
 def test_invalid_error_type_fails():
@@ -162,12 +170,11 @@ def test_invalid_error_type_fails():
 # INTEGRATION WITH IO LAYER
 # ----------------------------
 
+
 def test_read_jsonl_rejects_invalid_data(tmp_path):
     file = tmp_path / "bad.jsonl"
 
-    file.write_text(
-        '{"tool_name": "weather_tool", "arguments": "not-a-dict", "request": {}}\n'
-    )
+    file.write_text('{"tool_name": "weather_tool", "arguments": "not-a-dict", "request": {}}\n')
 
     with pytest.raises(DatasetValidationError):
         read_jsonl(file)

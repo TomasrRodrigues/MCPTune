@@ -53,12 +53,8 @@ class RecursiveSampler(ArgumentSampler):
         return self.sample(branch, depth + 1)
 
     def _is_nullable(self, schema: dict):
-        return (
-            schema.get("nullable") is True
-            or (
-                isinstance(schema.get("type"), list)
-                and "null" in schema["type"]
-            )
+        return schema.get("nullable") is True or (
+            isinstance(schema.get("type"), list) and "null" in schema["type"]
         )
 
     def _sample_nullable(self, schema: dict, depth: int):
@@ -105,10 +101,7 @@ class RecursiveSampler(ArgumentSampler):
 
         length = self.rng.randint(min_items, max_items)
 
-        return [
-            self.sample(item_schema, depth + 1)
-            for _ in range(length)
-        ]
+        return [self.sample(item_schema, depth + 1) for _ in range(length)]
 
     def _fallback(self, schema: dict):
         t = schema.get("type")

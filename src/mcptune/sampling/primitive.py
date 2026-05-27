@@ -5,7 +5,6 @@ from .base import ArgumentSampler
 
 
 class PrimitiveSampler(ArgumentSampler):
-
     def __init__(self, rng=None):
         self.rng = rng or random.Random()
 
@@ -41,6 +40,7 @@ class PrimitiveSampler(ArgumentSampler):
         if pattern:
             try:
                 import rstr
+
                 return rstr.xeger(pattern)
             except Exception:
                 return "".join(self.rng.choices(string.ascii_lowercase, k=length))
@@ -64,6 +64,7 @@ class PrimitiveSampler(ArgumentSampler):
             max_v = min_v + 100.0
 
         return self.rng.uniform(min_v, max_v)
+
     #
 
     def _email(self):

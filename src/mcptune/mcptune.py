@@ -23,25 +23,20 @@ class MCPTune:
         # sampler is NOT shared across tools
         self.sampler = RecursiveSampler(self.rng)
 
-
     async def discover(self) -> list[ToolSpec]:
         return await self.adapter.discover_tools()
 
     def build_arguments(self, tool: ToolSpec) -> dict:
         # allow test override
-        if self.sampler.__class__.__name__ != "RecursiveSampler" or hasattr(self.sampler, "is_mock"):
-            return {
-                param.name: self.sampler.sample(param.schema)
-                for param in tool.parameters
-            }
+        if self.sampler.__class__.__name__ != "RecursiveSampler" or hasattr(
+            self.sampler, "is_mock"
+        ):
+            return {param.name: self.sampler.sample(param.schema) for param in tool.parameters}
 
         tool_rng = self._tool_rng(tool.name)
         sampler = RecursiveSampler(tool_rng)
 
-        return {
-            param.name: sampler.sample(param.schema)
-            for param in tool.parameters
-        }
+        return {param.name: sampler.sample(param.schema) for param in tool.parameters}
 
     def _stable_uuid(self, tool_name: str, arguments: dict) -> str:
         raw = f"{self.seed}:{tool_name}:{sorted(arguments.items())}".encode()
@@ -72,10 +67,7 @@ class MCPTune:
         sampler = RecursiveSampler(rng)
 
         for tool in tools:
-            arguments = {
-                p.name: sampler.sample(p.schema)
-                for p in tool.parameters
-            }
+            arguments = {p.name: sampler.sample(p.schema) for p in tool.parameters}
 
             request = {
                 "jsonrpc": "2.0",
@@ -87,11 +79,13 @@ class MCPTune:
                 },
             }
 
-            dataset.append(DatasetRow(
-                tool_name=tool.name,
-                arguments=arguments,
-                request=request,
-            ))
+            dataset.append(
+                DatasetRow(
+                    tool_name=tool.name,
+                    arguments=arguments,
+                    request=request,
+                )
+            )
 
         return dataset
 
