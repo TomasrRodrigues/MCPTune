@@ -1,16 +1,11 @@
 import pytest
-
 from hypothesis import given
 from hypothesis import strategies as st
-from hypothesis import settings
-
 from jsonschema import validate
 
 from mcptune.sampling.recursive import RecursiveSampler
 
-
 PRIMITIVE_TYPES = ["string", "integer", "number", "boolean"]
-
 
 
 @st.composite
