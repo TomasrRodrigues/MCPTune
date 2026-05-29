@@ -285,3 +285,138 @@ def test_ollama_unreachable_raises_helpful_error():
     # we exercise _call_ollama directly to see the raised exception.
     with pytest.raises(ConnectionError, match="Ollama"):
         sampler._call_ollama("test prompt")
+
+
+# ---------------------------------------------------------------------------
+# Description grounding
+# ---------------------------------------------------------------------------
+
+
+def _capture_prompt():
+    """Build an llm_call that records the prompt and returns a valid response."""
+    captured = {}
+
+    def call(prompt):
+        captured["prompt"] = prompt
+        return '{"city": "Lisbon"}'
+
+    return captured, call
+
+
+@pytest.mark.unit
+def test_grounded_prompt_includes_tool_description():
+    captured, call = _capture_prompt()
+    sampler = SemanticSampler(backend="ollama", llm_call=call)
+    sampler.sample_batch(
+        "get_weather",
+        "Get the current weather for a city",
+        {"city": {"type": "string"}},
+    )
+    assert "Get the current weather for a city" in captured["prompt"]
+
+
+@pytest.mark.unit
+def test_grounded_prompt_includes_parameter_description():
+    captured, call = _capture_prompt()
+    sampler = SemanticSampler(backend="ollama", llm_call=call)
+    sampler.sample_batch(
+        "get_weather",
+        "Get the weather",
+        {"city": {"type": "string", "description": "The city to query"}},
+    )
+    assert "The city to query" in captured["prompt"]
+
+
+@pytest.mark.unit
+def test_grounded_prompt_handles_missing_parameter_description():
+    captured, call = _capture_prompt()
+    sampler = SemanticSampler(backend="ollama", llm_call=call)
+    sampler.sample_batch(
+        "get_weather",
+        "Get the weather",
+        {"city": {"type": "string"}},  # no description
+    )
+    # Prompt should still include the parameter name and type
+    assert "city" in captured["prompt"]
+    assert "string" in captured["prompt"]
+
+
+@pytest.mark.unit
+def test_grounded_prompt_handles_empty_tool_description():
+    captured, call = _capture_prompt()
+    sampler = SemanticSampler(backend="ollama", llm_call=call)
+    sampler.sample_batch("get_weather", "", {"city": {"type": "string"}})
+    assert "(no description)" in captured["prompt"]
+
+
+@pytest.mark.unit
+def test_grounded_prompt_handles_none_description():
+    """Schemas may store None where you'd expect an empty string."""
+    captured, call = _capture_prompt()
+    sampler = SemanticSampler(backend="ollama", llm_call=call)
+    sampler.sample_batch(
+        "get_weather",
+        "Get the weather",
+        {"city": {"type": "string", "description": None}},
+    )
+    assert "city" in captured["prompt"]
+
+
+@pytest.mark.unit
+def test_grounded_default_prompt_version():
+    sampler = SemanticSampler(backend="local")
+    assert sampler.prompt_version == "grounded_semantic_v1"
+
+
+@pytest.mark.unit
+def test_legacy_prompt_version_still_usable():
+    """semantic_v1 stays available for ablation and dataset reproducibility."""
+    captured, call = _capture_prompt()
+    sampler = SemanticSampler(
+        backend="ollama",
+        prompt_version="semantic_v1",
+        llm_call=call,
+    )
+    sampler.sample_batch(
+        "get_weather",
+        "Get the weather",
+        {"city": {"type": "string", "description": "The city"}},
+    )
+    # The ungrounded prompt embeds the description in JSON, not in a
+    # human-readable block — but the description is still in the prompt.
+    assert "city" in captured["prompt"]
+
+
+@pytest.mark.unit
+def test_format_parameter_block_with_description():
+    block = SemanticSampler._format_parameter_block(
+        {"city": {"type": "string", "description": "The city name"}}
+    )
+    assert block == "- city (string): The city name"
+
+
+@pytest.mark.unit
+def test_format_parameter_block_with_format():
+    block = SemanticSampler._format_parameter_block(
+        {"contact": {"type": "string", "format": "email", "description": "Contact email"}}
+    )
+    assert "format: email" in block
+    assert "Contact email" in block
+
+
+@pytest.mark.unit
+def test_format_parameter_block_without_description():
+    block = SemanticSampler._format_parameter_block({"city": {"type": "string"}})
+    assert block == "- city (string)"
+
+
+@pytest.mark.unit
+def test_truncate_short_text_unchanged():
+    assert SemanticSampler._truncate("hello", 800) == "hello"
+
+
+@pytest.mark.unit
+def test_truncate_long_text_clipped_with_ellipsis():
+    truncated = SemanticSampler._truncate("a" * 1000, 800)
+    assert len(truncated) == 800
+    assert truncated.endswith("...")

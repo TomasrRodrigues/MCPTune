@@ -25,7 +25,7 @@ class SemanticSampler:
     def __init__(
         self,
         backend: str = "local",
-        prompt_version: str = "semantic_v1",
+        prompt_version: str = "grounded_semantic_v1",
         model: str | None = None,
         temperature: float = 0.0,
         llm_call: Callable[[str], str] | None = None,
@@ -186,10 +186,6 @@ class SemanticSampler:
         generated_tokens = outputs[0][inputs["input_ids"].shape[1] :]
         return self._hf_tokenizer.decode(generated_tokens, skip_special_tokens=True).strip()
 
-    # ---------------------------------------------------------------------
-    # Prompt building and response parsing
-    # ---------------------------------------------------------------------
-
     def _build_prompt(
         self,
         tool_name: str,
@@ -197,10 +193,14 @@ class SemanticSampler:
         properties: dict[str, Any],
     ) -> str:
         template = self._load_prompt_template()
+        parameter_block = self._format_parameter_block(properties)
         properties_json = json.dumps(properties, indent=2)
+        tool_desc = self._truncate(tool_description or "(no description)", 800)
+
         return (
             template.replace("{tool_name}", tool_name)
-            .replace("{tool_description}", tool_description or "(no description)")
+            .replace("{tool_description}", tool_desc)
+            .replace("{parameter_block}", parameter_block)
             .replace("{properties_json}", properties_json)
         )
 
@@ -253,3 +253,34 @@ class SemanticSampler:
                 validated[name] = value
 
         return validated
+
+    @staticmethod
+    def _format_parameter_block(properties: dict[str, Any]) -> str:
+        """Format properties as a grounded, human-readable list including
+        parameter descriptions from the JSONSchema."""
+        lines = []
+        for name, schema in properties.items():
+            type_str = schema.get("type", "any")
+            format_str = schema.get("format", "")
+            description = (schema.get("description") or "").strip()
+
+            type_part = type_str
+            if format_str:
+                type_part = f"{type_str}, format: {format_str}"
+
+            header = f"- {name} ({type_part})"
+            if description:
+                description = SemanticSampler._truncate(description, max_chars=800)
+                lines.append(f"{header}: {description}")
+            else:
+                lines.append(header)
+
+        return "\n".join(lines)
+
+    @staticmethod
+    def _truncate(text: str, max_chars: int) -> str:
+        """Truncate text to max_chars with ellipsis. ~800 chars ≈ 200 tokens,
+        the budget the issue specifies."""
+        if len(text) <= max_chars:
+            return text
+        return text[: max_chars - 3] + "..."
