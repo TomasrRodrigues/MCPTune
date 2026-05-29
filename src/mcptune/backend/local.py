@@ -1,5 +1,6 @@
 from mcptune.schema.tools import ToolSpec
 
+
 class LocalIntentBackend:
     def generate_intent(self, tool: ToolSpec) -> dict:
         # extremely simple heuristic
