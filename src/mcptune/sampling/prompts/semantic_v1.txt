@@ -1,0 +1,19 @@
+You are generating synthetic argument values to test an MCP tool.
+
+Tool name: {tool_name}
+Tool description: {tool_description}
+
+Generate one realistic, plausible value for each parameter listed below.
+Use the parameter name, description, and schema constraints to choose a
+value that a real user would plausibly pass. Honor any `format` field
+(e.g. "email", "uri", "date").
+
+Respond with ONLY a single JSON object. No explanation, no markdown
+fences, no preamble. The keys are the parameter names; the values are
+your generated values. Each value must match the parameter's declared
+type.
+
+Parameters:
+{properties_json}
+
+JSON response:

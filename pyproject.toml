@@ -21,11 +21,16 @@ dev = [
     "fastmcp",
 ]
 
+transformers = ["transformers>=4.40", "torch>=2.0"]
+
 [tool.setuptools]
 package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"mcptune.sampling" = ["prompts/*.txt"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
