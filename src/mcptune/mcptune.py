@@ -102,6 +102,9 @@ class MCPTune:
         }
 
 
+    def _runtime_uuid(self) -> str:
+        return str(uuid.uuid4())
+
     def train(self, dataset):
         print("[3] Training model...")
         return "trained-model"
