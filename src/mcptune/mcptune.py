@@ -21,6 +21,7 @@ class MCPTune:
         intent_backend: str = "none",
         intent_model: str | None = None,
         intent_llm_call=None,
+        trainer=None,
     ):
         self.model = model
         self.mcpserver = mcpserver
@@ -37,6 +38,8 @@ class MCPTune:
             model=intent_model,
             llm_call=intent_llm_call,
         )
+
+        self.trainer = trainer
 
     async def discover(self) -> list[ToolSpec]:
         return await self.adapter.discover_tools()
@@ -105,9 +108,12 @@ class MCPTune:
             },
         }
 
-    def train(self, dataset):
-        print("[3] Training model...")
-        return "trained-model"
+    def train(self, dataset, config=None):
+        return self.trainer.train(
+            self.model,
+            dataset,
+            config,
+        )
 
     def evaluate(self, model):
         print("[4] Evaluating model...")
