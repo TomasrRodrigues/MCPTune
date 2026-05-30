@@ -1,8 +1,8 @@
 """Shared LLM backend dispatcher for synthesis modules.
 
 Two free, locally-runnable backends:
-- "ollama" — HTTP to a local Ollama server (no API keys, no signup)
-- "transformers" — HuggingFace transformers in-process (heavier dep)
+- "ollama" - HTTP to a local Ollama server (no API keys, no signup)
+- "transformers" - HuggingFace transformers in-process (heavier dep)
 
 Used by:
 - mcptune.sampling.semantic.SemanticSampler
@@ -30,7 +30,7 @@ class LLMClient:
         self.model = model
         self.temperature = temperature
         self.ollama_host = ollama_host or os.environ.get("OLLAMA_HOST", "http://localhost:11434")
-        # Lazy-loaded transformers state — populated on first call.
+        # Lazy-loaded transformers state - populated on first call.
         self._hf_tokenizer = None
         self._hf_model = None
         self._hf_model_name: str | None = None

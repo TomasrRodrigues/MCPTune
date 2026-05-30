@@ -50,7 +50,7 @@ def test_template_fallback_handles_empty_arguments():
 
 
 # ---------------------------------------------------------------------------
-# LLM path — happy and degenerate responses
+# LLM path - happy and degenerate responses
 # ---------------------------------------------------------------------------
 
 
@@ -99,7 +99,7 @@ def test_synthesize_falls_back_when_llm_returns_whitespace_only():
 
 
 # ---------------------------------------------------------------------------
-# Prompt content — what the LLM actually sees
+# Prompt content - what the LLM actually sees
 # ---------------------------------------------------------------------------
 
 
@@ -198,12 +198,12 @@ def test_default_prompt_version():
 
 @pytest.mark.unit
 def test_default_temperature_is_above_zero():
-    """Intent synthesis wants variety, not determinism — default temp > 0."""
+    """Intent synthesis wants variety, not determinism - default temp > 0."""
     assert IntentSynthesizer().temperature > 0
 
 
 # ---------------------------------------------------------------------------
-# Provenance — IntentResult.prompt_version
+# Provenance - IntentResult.prompt_version
 # ---------------------------------------------------------------------------
 
 
@@ -228,7 +228,7 @@ def test_llm_path_records_prompt_version():
 @pytest.mark.unit
 def test_llm_fallback_path_records_no_prompt_version():
     """When the LLM raises and we fall back to the template, the prompt
-    version recorded must be None — the intent wasn't actually produced
+    version recorded must be None - the intent wasn't actually produced
     by the prompt."""
 
     def raising(_p):

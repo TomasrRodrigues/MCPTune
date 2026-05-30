@@ -16,7 +16,7 @@ from mcptune.schema.tools import ToolSpec
 class IntentResult:
     """Result of an intent synthesis call.
 
-    `prompt_version` is None when the template fallback was used — either
+    `prompt_version` is None when the template fallback was used - either
     because the backend is "none" or because the LLM call failed/returned
     empty. Callers recording provenance should treat None as "no LLM
     prompt was actually used to produce this intent."
@@ -31,9 +31,9 @@ class IntentSynthesizer:
     assistant to call `tool` with `arguments`.
 
     Backends:
-        none          — deterministic template fallback, no LLM (default)
-        ollama        — local Ollama HTTP API
-        transformers  — HuggingFace transformers, in-process
+        none          - deterministic template fallback, no LLM (default)
+        ollama        - local Ollama HTTP API
+        transformers  - HuggingFace transformers, in-process
     """
 
     def __init__(

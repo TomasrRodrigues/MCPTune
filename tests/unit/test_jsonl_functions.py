@@ -81,7 +81,7 @@ def test_jsonl_round_trip_preserves_user_intent_and_prompt_version(tmp_path):
                 "method": "tools/call",
                 "params": {"name": "ping", "arguments": {}},
             },
-            # template fallback case — no LLM was used
+            # template fallback case - no LLM was used
             user_intent="Use the ping tool.",
             intent_prompt_version=None,
         ),

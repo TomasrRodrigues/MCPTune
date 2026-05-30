@@ -5,7 +5,7 @@ value, and produces a plausible value. Rules are evaluated in order;
 the first match wins. Format-based rules come first since they're
 more specific than name-based heuristics.
 
-The `examples` field in a schema overrides all rule matching — if a
+The `examples` field in a schema overrides all rule matching - if a
 schema author provided examples, we use them.
 """
 

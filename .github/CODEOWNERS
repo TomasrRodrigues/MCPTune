@@ -5,5 +5,5 @@
 # "Require review from Code Owners", PRs cannot merge until the listed
 # owner approves them.
 
-# Default owner — applies to everything not matched by a more specific rule below.
+# Default owner - applies to everything not matched by a more specific rule below.
 *  @TomasrRodrigues

@@ -8,7 +8,7 @@ class FastMCPAdapter(MCPAdapter):
     """Adapter that talks to a FastMCP server through its Client interface.
 
     The server is wrapped in an in-memory Client, so calls go through the
-    same public API that an HTTP or stdio adapter would use — only the
+    same public API that an HTTP or stdio adapter would use - only the
     transport substrate differs.
     """
 

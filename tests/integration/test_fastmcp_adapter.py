@@ -3,7 +3,7 @@
 Covers the discovery → schema-normalization → ToolSpec pipeline. When
 additional transport adapters land (Issue 8: HTTP, stdio), the fixture
 and the assertions here are intended to be promoted into a parametrized
-contract test that runs against every adapter — anything we assert here
+contract test that runs against every adapter - anything we assert here
 is part of the adapter interface, regardless of transport.
 """
 
@@ -41,7 +41,7 @@ def rich_fastmcp_server() -> FastMCP:
 
     @mcp.tool
     def ping() -> str:
-        """Health check — takes no arguments."""
+        """Health check - takes no arguments."""
         return "pong"
 
     @mcp.tool
@@ -90,7 +90,7 @@ async def test_tool_with_no_parameters_yields_empty_parameter_list(rich_adapter)
 
 
 # ---------------------------------------------------------------------------
-# Schema fidelity — the raw JSONSchema must survive normalization intact
+# Schema fidelity - the raw JSONSchema must survive normalization intact
 # ---------------------------------------------------------------------------
 
 
@@ -155,7 +155,7 @@ async def test_parameter_type_is_preserved_for_floats(rich_adapter):
 
 
 # ---------------------------------------------------------------------------
-# Execution behaviour — smoke checks at the adapter level.
+# Execution behaviour - smoke checks at the adapter level.
 # Exhaustive execution / error-path tests belong with execute_dataset.
 # ---------------------------------------------------------------------------
 

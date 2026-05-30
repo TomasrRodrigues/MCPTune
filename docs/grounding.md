@@ -39,7 +39,7 @@ The full template lives at
 
 ## Missing descriptions
 
-Many MCP servers ship without parameter-level descriptions. When a description is missing the parameter line shows only name and type; generation continues normally, just with less grounding. If you'd rather fail loudly when descriptions are missing — useful for catching schema gaps in your own server — validate the `ToolSpec` before calling the sampler.
+Many MCP servers ship without parameter-level descriptions. When a description is missing the parameter line shows only name and type; generation continues normally, just with less grounding. If you'd rather fail loudly when descriptions are missing - useful for catching schema gaps in your own server - validate the `ToolSpec` before calling the sampler.
 
 ## Truncation
 
@@ -47,7 +47,7 @@ Descriptions are truncated to ~800 characters (~200 tokens) per parameter and pe
 
 ## Privacy
 
-Parameter descriptions are public schema content — they ship with the MCP server and are not sensitive. However, prompts may be logged by the LLM backend (Ollama logs requests by default; remote APIs may keep them indefinitely). If your descriptions contain information you'd rather not log, configure the backend's logging accordingly.
+Parameter descriptions are public schema content - they ship with the MCP server and are not sensitive. However, prompts may be logged by the LLM backend (Ollama logs requests by default; remote APIs may keep them indefinitely). If your descriptions contain information you'd rather not log, configure the backend's logging accordingly.
 
 ## Switching prompt versions
 

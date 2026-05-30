@@ -2,7 +2,7 @@
 
 Three turns per row: user -> assistant (with a tool_use content block)
 -> user (with a tool_result content block). Note Anthropic puts
-tool_result back in a user turn — there is no separate tool role.
+tool_result back in a user turn - there is no separate tool role.
 """
 
 import json

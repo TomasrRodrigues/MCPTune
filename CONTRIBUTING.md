@@ -24,7 +24,7 @@ Tests are organized in three layers, distinguished by pytest markers:
 
 ​```bash
 pytest                    # unit + integration (e2e excluded by default)
-pytest -m unit            # fast, no IO — the loop you want during dev
+pytest -m unit            # fast, no IO - the loop you want during dev
 pytest -m integration     # adapter ↔ core, in-process MCP servers
 pytest -m e2e             # spawns external processes; opt-in only
 ​```
@@ -56,26 +56,26 @@ Use [conventional commits](https://www.conventionalcommits.org/) for the subject
 <type>(<scope>): <imperative summary>
 ​```
 
-Common types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `ci`. Scope is the affected module — `adapters`, `sampling`, `schema`, etc.
+Common types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `ci`. Scope is the affected module - `adapters`, `sampling`, `schema`, etc.
 
 Wrap the body at ~72 characters and explain *why* the change matters. Reference issues by number when applicable.
 
 ## Pull request workflow
 
-1. Open a draft PR early if the change is non-trivial — architecture conversations are easier with code than in the abstract.
+1. Open a draft PR early if the change is non-trivial - architecture conversations are easier with code than in the abstract.
 2. Keep PRs small and single-purpose. A test refactor and a feature addition belong in separate PRs.
 3. Make sure CI is green before requesting review.
 4. Squash-and-merge is the default. The history on `main` should read as a logical sequence of changes, not your working history.
 
 ## Architecture quick reference
 
-Before changing core code, please skim these constraints — they shape what reviewers will ask for.
+Before changing core code, please skim these constraints - they shape what reviewers will ask for.
 
 **Transports stay behind adapters.** Anything that knows about JSON-RPC envelopes, HTTP, stdio, or FastMCP types belongs in `mcptune/adapters/`. Core code operates only on `ToolSpec` and the normalized response dict.
 
 **Schema fidelity is non-negotiable.** When normalizing a tool, the full original JSONSchema must reach `ToolSpec.raw_input_schema` intact. Any normalization that loses or transforms schema information is a regression even if tests pass.
 
-**Adapters share a contract.** Every adapter implements `discover_tools()` and `call_tool()` with identical return shapes. The contract is exercised in `tests/integration/test_fastmcp_adapter.py` — when you add an adapter, the same assertions should hold against it.
+**Adapters share a contract.** Every adapter implements `discover_tools()` and `call_tool()` with identical return shapes. The contract is exercised in `tests/integration/test_fastmcp_adapter.py` - when you add an adapter, the same assertions should hold against it.
 
 **Samplers are schema-driven, not domain-driven.** No hardcoded knowledge about specific tool names or argument meanings. Generation logic decides based on the JSONSchema, not the parameter name. Semantic generation (planned) will operate via metadata, not lookup tables.
 

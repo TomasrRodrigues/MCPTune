@@ -151,7 +151,7 @@ def test_sample_batch_different_tools_have_independent_cache_entries():
 
 
 # ---------------------------------------------------------------------------
-# LLM-backed sampling — injected llm_call for hermetic tests
+# LLM-backed sampling - injected llm_call for hermetic tests
 # ---------------------------------------------------------------------------
 
 
@@ -381,7 +381,7 @@ def test_legacy_prompt_version_still_usable():
         {"city": {"type": "string", "description": "The city"}},
     )
     # The ungrounded prompt embeds the description in JSON, not in a
-    # human-readable block — but the description is still in the prompt.
+    # human-readable block - but the description is still in the prompt.
     assert "city" in captured["prompt"]
 
 
