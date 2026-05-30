@@ -42,7 +42,6 @@ class MCPTune:
         return await self.adapter.discover_tools()
 
     def build_arguments(self, tool: ToolSpec, sample_index: int = 0) -> dict:
-        # Honor test-injected samplers (e.g. DummySampler in test_argument_builder).
         if not isinstance(self.sampler, RecursiveSampler):
             return {p.name: self.sampler.sample(p.schema) for p in tool.parameters}
 
@@ -95,14 +94,6 @@ class MCPTune:
 
         return dataset
 
-    def _tool_sample_rng(self, tool_name: str, sample_index: int) -> random.Random:
-        """Deterministic per-(tool, sample) RNG. Same root seed + tool + index
-        always yields the same sequence; different sample_index values yield
-        different sequences so multi-sample runs produce diverse arguments."""
-        raw = f"{self.seed}:{tool_name}:{sample_index}".encode()
-        digest = hashlib.sha256(raw).digest()
-        return random.Random(int.from_bytes(digest[:8], "big"))
-
     def build_mcp_request(self, tool: ToolSpec, arguments: dict) -> dict:
         return {
             "jsonrpc": "2.0",
@@ -113,9 +104,6 @@ class MCPTune:
                 "arguments": arguments,
             },
         }
-
-    def _runtime_uuid(self) -> str:
-        return str(uuid.uuid4())
 
     def train(self, dataset):
         print("[3] Training model...")
@@ -141,7 +129,10 @@ class MCPTune:
     def _runtime_uuid(self) -> str:
         return str(uuid.uuid4())
 
-    def _tool_rng(self, tool_name: str) -> random.Random:
-        raw = f"{self.seed}:{tool_name}".encode()
+    def _tool_sample_rng(self, tool_name: str, sample_index: int) -> random.Random:
+        """Deterministic per-(tool, sample) RNG. Same root seed + tool + index
+        always yields the same sequence; different sample_index values yield
+        different sequences so multi-sample runs produce diverse arguments."""
+        raw = f"{self.seed}:{tool_name}:{sample_index}".encode()
         digest = hashlib.sha256(raw).digest()
         return random.Random(int.from_bytes(digest[:8], "big"))
