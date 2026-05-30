@@ -9,10 +9,16 @@ from collections.abc import Callable
 
 from mcptune.schema.dataset import DatasetRow
 
+from .anthropic import anthropic_tool_use
 from .openai import openai_messages
+from .sharegpt import sharegpt
+from .trl import trl_sft
 
 FORMATS: dict[str, Callable[[list[DatasetRow]], list[dict]]] = {
     "openai": openai_messages,
+    "sharegpt": sharegpt,
+    "trl": trl_sft,
+    "anthropic": anthropic_tool_use,
 }
 
 
@@ -23,4 +29,11 @@ def convert(rows: list[DatasetRow], format: str) -> list[dict]:
     return FORMATS[format](rows)
 
 
-__all__ = ["convert", "openai_messages", "FORMATS"]
+__all__ = [
+    "convert",
+    "openai_messages",
+    "sharegpt",
+    "trl_sft",
+    "anthropic_tool_use",
+    "FORMATS",
+]

@@ -8,11 +8,13 @@ import json
 
 from mcptune.schema.dataset import DatasetRow
 
+from ._common import template_intent
+
 
 def openai_messages(rows: list[DatasetRow]) -> list[dict]:
     output = []
     for row in rows:
-        user_message = row.user_intent or _template_intent(row)
+        user_message = row.user_intent or template_intent(row)
         call_id = row.request["id"]
         tool_content = json.dumps(row.response) if row.response is not None else ""
 
@@ -42,11 +44,3 @@ def openai_messages(rows: list[DatasetRow]) -> list[dict]:
             }
         )
     return output
-
-
-def _template_intent(row: DatasetRow) -> str:
-    """Fallback for DatasetRows constructed without user_intent. Rows from
-    MCPTune.build_dataset always have one; this fires only for manual rows."""
-    if row.arguments:
-        return f"Use the {row.tool_name} tool with arguments: {json.dumps(row.arguments)}"
-    return f"Use the {row.tool_name} tool."
