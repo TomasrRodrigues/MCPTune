@@ -7,6 +7,7 @@ from .sampling.recursive import RecursiveSampler
 from .sampling.semantic import SemanticSampler
 from .schema import ToolSpec
 from .schema.dataset import DatasetRow
+from .synthesis.intent import IntentSynthesizer
 
 
 class MCPTune:
@@ -17,18 +18,25 @@ class MCPTune:
         adapter=None,
         seed: int = None,
         semantic_backend: str = "local",
+        intent_backend: str = "none",
+        intent_model: str | None = None,
+        intent_llm_call=None,
     ):
         self.model = model
         self.mcpserver = mcpserver
         self.adapter = adapter or FastMCPAdapter(mcpserver)
-
         self.seed = 0 if seed is None else seed
         self.rng = random.Random(self.seed)
 
         self.semantic_backend = semantic_backend
         self.semantic_sampler = SemanticSampler(backend=self.semantic_backend)
-
         self.sampler = RecursiveSampler(self.rng, semantic_sampler=self.semantic_sampler)
+
+        self.intent_synthesizer = IntentSynthesizer(
+            backend=intent_backend,
+            model=intent_model,
+            llm_call=intent_llm_call,
+        )
 
     async def discover(self) -> list[ToolSpec]:
         return await self.adapter.discover_tools()
@@ -61,8 +69,10 @@ class MCPTune:
         tools = sorted(tools, key=lambda t: t.name)
 
         for tool in tools:
-            for i in range(samples_per_tool):
-                arguments = self.build_arguments(tool, sample_index=i)
+            for sample_index in range(samples_per_tool):
+                arguments = self.build_arguments(tool, sample_index=sample_index)
+                intent_result = self.intent_synthesizer.synthesize(tool, arguments)
+
                 request = {
                     "jsonrpc": "2.0",
                     "id": self._stable_uuid(tool.name, arguments),
@@ -72,11 +82,14 @@ class MCPTune:
                         "arguments": arguments,
                     },
                 }
+
                 dataset.append(
                     DatasetRow(
                         tool_name=tool.name,
                         arguments=arguments,
                         request=request,
+                        user_intent=intent_result.intent,
+                        intent_prompt_version=intent_result.prompt_version,
                     )
                 )
 

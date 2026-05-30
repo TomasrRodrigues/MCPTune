@@ -31,6 +31,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "mcptune.sampling" = ["prompts/*.txt"]
+"mcptune.synthesis" = ["prompts/*.txt"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

@@ -178,3 +178,65 @@ def test_read_jsonl_rejects_invalid_data(tmp_path):
 
     with pytest.raises(DatasetValidationError):
         read_jsonl(file)
+
+
+@pytest.mark.unit
+def test_user_intent_optional_string_passes():
+    validate_dataset_row_dict(
+        {
+            "tool_name": "x",
+            "arguments": {},
+            "request": {},
+            "user_intent": "Show me the weather in Lisbon",
+        }
+    )
+
+
+@pytest.mark.unit
+def test_user_intent_none_passes():
+    validate_dataset_row_dict(
+        {
+            "tool_name": "x",
+            "arguments": {},
+            "request": {},
+            "user_intent": None,
+        }
+    )
+
+
+@pytest.mark.unit
+def test_user_intent_non_string_fails():
+    with pytest.raises(DatasetValidationError):
+        validate_dataset_row_dict(
+            {
+                "tool_name": "x",
+                "arguments": {},
+                "request": {},
+                "user_intent": 42,
+            }
+        )
+
+
+@pytest.mark.unit
+def test_intent_prompt_version_optional_string_passes():
+    validate_dataset_row_dict(
+        {
+            "tool_name": "x",
+            "arguments": {},
+            "request": {},
+            "intent_prompt_version": "intent_v1",
+        }
+    )
+
+
+@pytest.mark.unit
+def test_intent_prompt_version_non_string_fails():
+    with pytest.raises(DatasetValidationError):
+        validate_dataset_row_dict(
+            {
+                "tool_name": "x",
+                "arguments": {},
+                "request": {},
+                "intent_prompt_version": {"version": 1},
+            }
+        )

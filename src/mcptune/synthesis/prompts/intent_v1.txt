@@ -1,0 +1,23 @@
+You are simulating a user who wants to use an MCP tool indirectly.
+
+Your task: write a single short user message (1-2 sentences) that a
+real human would say to elicit a call to the tool described below.
+
+Tool: {tool_name}
+Description: {tool_description}
+
+Parameters:
+{parameters_section}
+
+The tool will be invoked with these argument values:
+{arguments_json}
+
+Constraints for your output:
+- Mention the relevant entities or values from the arguments
+- Sound like a natural human request, not a robotic restatement
+- Do NOT mention the tool name or refer to "the tool" explicitly
+- Do NOT use quotation marks around the whole message
+- Do NOT prefix with "User:" or similar
+- Output only the user message, nothing else
+
+User message:

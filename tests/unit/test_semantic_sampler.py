@@ -276,15 +276,13 @@ def test_extract_json_handles_empty_string():
 @pytest.mark.unit
 def test_ollama_unreachable_raises_helpful_error():
     """When Ollama isn't running and no llm_call is injected, the user
-    should get a clear connection error."""
-    sampler = SemanticSampler(
-        backend="ollama",
-        ollama_host="http://localhost:1",  # nothing listening here
-    )
-    # The connection error is caught in sample_batch and falls back, so
-    # we exercise _call_ollama directly to see the raised exception.
+    should get a clear connection error. After the LLMClient refactor,
+    this is verified via the client, not the sampler."""
+    from mcptune.llm.client import LLMClient
+
+    client = LLMClient(backend="ollama", ollama_host="http://localhost:1")
     with pytest.raises(ConnectionError, match="Ollama"):
-        sampler._call_ollama("test prompt")
+        client.generate("test prompt")
 
 
 # ---------------------------------------------------------------------------

@@ -8,3 +8,5 @@ class DatasetRow:
     request: dict
     response: dict | None = None
     error: str | None = None
+    user_intent: str | None = None
+    intent_prompt_version: str | None = None

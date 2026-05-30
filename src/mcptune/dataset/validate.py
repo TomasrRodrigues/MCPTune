@@ -28,3 +28,11 @@ def validate_dataset_row_dict(data: dict[str, Any]) -> None:
     if "error" in data and data["error"] is not None:
         if not isinstance(data["error"], str):
             raise DatasetValidationError("error must be str or None")
+
+    if "user_intent" in data and data["user_intent"] is not None:
+        if not isinstance(data["user_intent"], str):
+            raise DatasetValidationError("user_intent must be str or None")
+
+    if "intent_prompt_version" in data and data["intent_prompt_version"] is not None:
+        if not isinstance(data["intent_prompt_version"], str):
+            raise DatasetValidationError("intent_prompt_version must be str or None")

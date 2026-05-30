@@ -1,8 +1,9 @@
 import json
-import os
 from collections.abc import Callable
 from importlib.resources import files
 from typing import Any
+
+from mcptune.llm.client import LLMClient
 
 from .cache.samplercache import SemanticSamplerCache
 from .lookups import lookup_value
@@ -14,12 +15,6 @@ class SemanticSampler:
     Composes with the recursive sampler: this class returns a partial dict
     containing only the parameters it recognizes; the recursive sampler
     structurally samples whatever's missing.
-
-    Backends:
-        local         — offline lookup table, no model
-        ollama        — local Ollama HTTP API (http://localhost:11434)
-        transformers  — HuggingFace transformers, in-process
-        none          — skip semantic sampling entirely
     """
 
     def __init__(
@@ -35,14 +30,10 @@ class SemanticSampler:
         self.prompt_version = prompt_version
         self.model = model
         self.temperature = temperature
-        self.ollama_host = ollama_host or os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+        self.ollama_host = ollama_host
         self._llm_call = llm_call
+        self._client: LLMClient | None = None  # lazy
         self.cache = SemanticSamplerCache()
-
-        # Lazy-loaded transformers state — populated on first call.
-        self._hf_tokenizer = None
-        self._hf_model = None
-        self._hf_model_name: str | None = None
 
     def sample_batch(
         self,
@@ -67,8 +58,6 @@ class SemanticSampler:
             except Exception as e:
                 print(f"[MCPTune Warn] LLM backend failed, falling back to local: {e}")
 
-            # If LLM returned nothing usable (empty parse, all values dropped by
-            # type validation, or exception above), try local before giving up.
             if not generated:
                 generated = self._execute_local_lookup(properties)
 
@@ -78,7 +67,7 @@ class SemanticSampler:
         return generated
 
     # ---------------------------------------------------------------------
-    # Local lookup (offline)
+    # Local lookup
     # ---------------------------------------------------------------------
 
     def _execute_local_lookup(self, properties: dict[str, Any]) -> dict[str, Any]:
@@ -90,7 +79,7 @@ class SemanticSampler:
         return results
 
     # ---------------------------------------------------------------------
-    # LLM-backed batch generation
+    # LLM-backed generation (via shared LLMClient)
     # ---------------------------------------------------------------------
 
     def _execute_llm_batch(
@@ -105,86 +94,20 @@ class SemanticSampler:
         return self._validate_values(parsed, properties)
 
     def _call_llm(self, prompt: str) -> str:
-        """Dispatch to the configured backend. The llm_call override is the
-        injection point for tests and custom callers."""
         if self._llm_call is not None:
             return self._llm_call(prompt)
-
-        if self.backend == "ollama":
-            return self._call_ollama(prompt)
-        if self.backend == "transformers":
-            return self._call_transformers(prompt)
-
-        raise ValueError(f"No LLM caller configured for backend={self.backend!r}")
-
-    def _call_ollama(self, prompt: str) -> str:
-        """Call a local Ollama server. Requires `ollama serve` running and
-        the requested model pulled. No API key, no signup, no cost."""
-        import httpx  # transitive via fastmcp
-
-        model = self.model or "qwen2.5:7b"
-        try:
-            response = httpx.post(
-                f"{self.ollama_host}/api/generate",
-                json={
-                    "model": model,
-                    "prompt": prompt,
-                    "stream": False,
-                    "options": {"temperature": self.temperature},
-                    "format": "json",
-                },
-                timeout=120.0,
+        if self._client is None:
+            self._client = LLMClient(
+                backend=self.backend,
+                model=self.model,
+                temperature=self.temperature,
+                ollama_host=self.ollama_host,
             )
-            response.raise_for_status()
-        except httpx.ConnectError as e:
-            raise ConnectionError(
-                f"Could not reach Ollama at {self.ollama_host}. "
-                f"Is `ollama serve` running? Install: https://ollama.com"
-            ) from e
-        return response.json().get("response", "")
+        return self._client.generate(prompt, json_mode=True)
 
-    def _call_transformers(self, prompt: str) -> str:
-        """Call a HuggingFace transformers model in-process. Lazy-imports
-        and lazy-loads the model so users without the extra installed can
-        still use other backends."""
-        try:
-            import torch
-            from transformers import AutoModelForCausalLM, AutoTokenizer
-        except ImportError as e:
-            raise ImportError(
-                "Transformers backend requires the transformers and torch packages. "
-                "Install with: pip install mcptune[transformers]"
-            ) from e
-
-        model_name = self.model or "Qwen/Qwen2.5-1.5B-Instruct"
-
-        if self._hf_model is None or self._hf_model_name != model_name:
-            self._hf_tokenizer = AutoTokenizer.from_pretrained(model_name)
-            self._hf_model = AutoModelForCausalLM.from_pretrained(
-                model_name,
-                torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
-                device_map="auto",
-            )
-            self._hf_model_name = model_name
-
-        messages = [{"role": "user", "content": prompt}]
-        formatted = self._hf_tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True
-        )
-        inputs = self._hf_tokenizer(formatted, return_tensors="pt").to(self._hf_model.device)
-
-        do_sample = self.temperature > 0
-        with torch.no_grad():
-            outputs = self._hf_model.generate(
-                **inputs,
-                max_new_tokens=512,
-                temperature=self.temperature if do_sample else 1.0,
-                do_sample=do_sample,
-                pad_token_id=self._hf_tokenizer.eos_token_id,
-            )
-
-        generated_tokens = outputs[0][inputs["input_ids"].shape[1] :]
-        return self._hf_tokenizer.decode(generated_tokens, skip_special_tokens=True).strip()
+    # ---------------------------------------------------------------------
+    # Prompt building (unchanged from Issue 13)
+    # ---------------------------------------------------------------------
 
     def _build_prompt(
         self,
@@ -210,6 +133,33 @@ class SemanticSampler:
             .joinpath("prompts", f"{self.prompt_version}.txt")
             .read_text(encoding="utf-8")
         )
+
+    @staticmethod
+    def _format_parameter_block(properties: dict[str, Any]) -> str:
+        lines = []
+        for name, schema in properties.items():
+            type_str = schema.get("type", "any")
+            format_str = schema.get("format", "")
+            description = (schema.get("description") or "").strip()
+
+            type_part = type_str
+            if format_str:
+                type_part = f"{type_str}, format: {format_str}"
+
+            header = f"- {name} ({type_part})"
+            if description:
+                description = SemanticSampler._truncate(description, max_chars=800)
+                lines.append(f"{header}: {description}")
+            else:
+                lines.append(header)
+
+        return "\n".join(lines)
+
+    @staticmethod
+    def _truncate(text: str, max_chars: int) -> str:
+        if len(text) <= max_chars:
+            return text
+        return text[: max_chars - 3] + "..."
 
     @staticmethod
     def _extract_json(response: str) -> dict:
@@ -253,34 +203,3 @@ class SemanticSampler:
                 validated[name] = value
 
         return validated
-
-    @staticmethod
-    def _format_parameter_block(properties: dict[str, Any]) -> str:
-        """Format properties as a grounded, human-readable list including
-        parameter descriptions from the JSONSchema."""
-        lines = []
-        for name, schema in properties.items():
-            type_str = schema.get("type", "any")
-            format_str = schema.get("format", "")
-            description = (schema.get("description") or "").strip()
-
-            type_part = type_str
-            if format_str:
-                type_part = f"{type_str}, format: {format_str}"
-
-            header = f"- {name} ({type_part})"
-            if description:
-                description = SemanticSampler._truncate(description, max_chars=800)
-                lines.append(f"{header}: {description}")
-            else:
-                lines.append(header)
-
-        return "\n".join(lines)
-
-    @staticmethod
-    def _truncate(text: str, max_chars: int) -> str:
-        """Truncate text to max_chars with ellipsis. ~800 chars ≈ 200 tokens,
-        the budget the issue specifies."""
-        if len(text) <= max_chars:
-            return text
-        return text[: max_chars - 3] + "..."

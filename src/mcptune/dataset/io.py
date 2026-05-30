@@ -9,18 +9,7 @@ SCHEMA_VERSION = 1
 
 
 def write_jsonl(rows: list[DatasetRow], path: str | Path) -> None:
-    """
-    Takes in memory dataset rows and writes them to a .jsonl file.
-
-    Arguments:
-        rows: list[DatasetRow]
-        path: str
-
-    Returnable:
-        void (file written)
-    """
     path = Path(path)
-
     with path.open("w", encoding="utf-8") as f:
         for row in rows:
             record = asdict(row)
@@ -29,16 +18,6 @@ def write_jsonl(rows: list[DatasetRow], path: str | Path) -> None:
 
 
 def read_jsonl(path: str | Path, strict: bool = True) -> list[DatasetRow]:
-    """
-    Reads the jsonl files and constructs DatasetRow objects.
-
-    Arguments:
-        path: str
-
-    Returnable:
-        dataset: list[DatasetRow]
-    """
-
     path = Path(path)
     rows: list[DatasetRow] = []
 
@@ -48,7 +27,6 @@ def read_jsonl(path: str | Path, strict: bool = True) -> list[DatasetRow]:
                 continue
 
             data = json.loads(line)
-            # schema_version = data.pop("schema_version", None)
 
             try:
                 validate_dataset_row_dict(data)
@@ -63,7 +41,8 @@ def read_jsonl(path: str | Path, strict: bool = True) -> list[DatasetRow]:
                 request=data["request"],
                 response=data.get("response"),
                 error=data.get("error"),
+                user_intent=data.get("user_intent"),
+                intent_prompt_version=data.get("intent_prompt_version"),
             )
-
             rows.append(row)
     return rows
