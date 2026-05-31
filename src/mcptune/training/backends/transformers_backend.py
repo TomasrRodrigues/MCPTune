@@ -174,9 +174,7 @@ class TransformersTrainerBackend(TrainerBackend):
     def save(self, model: TrainedModel, path: str) -> None:
         """Persist the most recently trained adapter + tokenizer to `path`."""
         if self._last_trainer is None:
-            raise RuntimeError(
-                "No trained model to save. Call train() before save()."
-            )
+            raise RuntimeError("No trained model to save. Call train() before save().")
         Path(path).mkdir(parents=True, exist_ok=True)
         self._last_trainer.save_model(path)
         self._last_tokenizer.save_pretrained(path)

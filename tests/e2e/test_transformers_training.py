@@ -20,7 +20,6 @@ from mcptune.training.backends.transformers_backend import (  # noqa: E402
 )
 from mcptune.training.types import TrainedModel  # noqa: E402
 
-
 TINY_MODEL = "HuggingFaceTB/SmolLM-135M-Instruct"
 
 
