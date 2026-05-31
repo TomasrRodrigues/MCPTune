@@ -26,13 +26,17 @@ model, metrics = await tuner.run()
 |------------|--------|
 | FastMCP adapter | ✅ |
 | Tool discovery + schema normalization | ✅ |
-| Primitive argument sampling (string, int, float, bool) | ✅ |
+| Primitive argument sampling | ✅ |
+| Recursive schema sampling (nested, arrays, enums) | ✅ |
+| Semantic argument generation | ✅ |
+| User intent synthesis | ✅ |
+| Dataset persistence (JSONL) | ✅ |
 | Closed-loop execution + response capture | ✅ |
-| Recursive schema sampling (nested, arrays, enums) | 🚧 planned |
-| Semantic argument generation | 🚧 planned |
+| Training-format emission (OpenAI / ShareGPT / TRL / Anthropic) | ✅ |
+| LoRA fine-tuning (transformers backend) | ✅ |
 | HTTP / stdio adapters | 🚧 planned |
-| Training-format emission | 🚧 planned |
 | Evaluation pipeline | 🚧 planned |
+| CLI | 🚧 planned |
 
 ## Quickstart
 

@@ -21,7 +21,13 @@ dev = [
     "fastmcp",
 ]
 
-transformers = ["transformers>=4.40", "torch>=2.0"]
+transformers = [
+    "transformers>=4.40",
+    "torch>=2.0",
+    "peft>=0.10",
+    "accelerate>=0.30",
+    "datasets>=2.18",
+]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
