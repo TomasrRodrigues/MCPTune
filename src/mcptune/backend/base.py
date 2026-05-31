@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 
-
 """Backend execution interface.
 
 This module defines the abstract `Backend` base class that concrete

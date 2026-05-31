@@ -86,7 +86,6 @@ class MCPTune:
         self.seed = 0 if seed is None else seed
         self.rng = random.Random(self.seed)
 
-
         # Sampling stack
         self.semantic_backend = semantic_backend
         self.semantic_sampler = SemanticSampler(backend=self.semantic_backend)
@@ -96,7 +95,6 @@ class MCPTune:
             semantic_sampler=self.semantic_sampler,
         )
 
-
         # Intent synthesis
         self.intent_synthesizer = IntentSynthesizer(
             backend=intent_backend,
@@ -104,11 +102,8 @@ class MCPTune:
             llm_call=intent_llm_call,
         )
 
-
         # Training backend
         self.trainer = trainer
-
-
 
     async def discover(self) -> list[ToolSpec]:
         """
@@ -120,8 +115,6 @@ class MCPTune:
             Structured representation of available tools.
         """
         return await self.adapter.discover_tools()
-
-
 
     def build_arguments(self, tool: ToolSpec, sample_index: int = 0) -> dict:
         """
@@ -162,8 +155,6 @@ class MCPTune:
             tool_name=tool.name,
             tool_description=tool.description,
         )
-
-
 
     def build_dataset(
         self,
@@ -223,8 +214,6 @@ class MCPTune:
 
         return dataset
 
-
-
     def build_mcp_request(self, tool: ToolSpec, arguments: dict) -> dict:
         """
         Build a runtime MCP request (non-deterministic ID).
@@ -241,8 +230,6 @@ class MCPTune:
             },
         }
 
-
-
     def train(self, dataset, config=None):
         """
         Delegate training to configured backend.
@@ -256,7 +243,6 @@ class MCPTune:
             config,
         )
 
-
     # TODO: evaluate
     def evaluate(self, model):
         """
@@ -264,8 +250,6 @@ class MCPTune:
         """
         print("[4] Evaluating model...")
         return {"accuracy": 0.9}
-
-
 
     async def run(self):
         """
@@ -280,10 +264,6 @@ class MCPTune:
         print("Done:", metrics)
         return model, metrics
 
-
-
-
-
     # Deterministic helpers
 
     def _stable_uuid(self, tool_name: str, arguments: dict) -> str:
@@ -294,15 +274,11 @@ class MCPTune:
         digest = hashlib.sha256(raw).digest()
         return str(uuid.UUID(bytes=digest[:16]))
 
-
-
     def _runtime_uuid(self) -> str:
         """
         Non-deterministic UUID for real-time MCP requests.
         """
         return str(uuid.uuid4())
-
-
 
     def _tool_sample_rng(self, tool_name: str, sample_index: int) -> random.Random:
         """

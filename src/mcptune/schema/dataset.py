@@ -29,6 +29,7 @@ class DatasetRow:
     intent_prompt_version: str | None
         Version identifier for the prompt used to generate `user_intent`.
     """
+
     tool_name: str
     arguments: dict
     request: dict

@@ -29,7 +29,6 @@ class FastMCPAdapter(MCPAdapter):
         """
         self.server = server
 
-
     async def discover_tools(self) -> list[ToolSpec]:
         """
         Fetch tool definitions from the MCP server and convert them
@@ -44,7 +43,6 @@ class FastMCPAdapter(MCPAdapter):
             tools = await client.list_tools()
 
         return [self._to_toolspec(tool) for tool in tools]
-
 
     async def call_tool(self, tool_name: str, arguments: dict) -> dict:
         """
@@ -76,7 +74,6 @@ class FastMCPAdapter(MCPAdapter):
 
         return self._normalize_response(result)
 
-
     def _to_toolspec(self, tool) -> ToolSpec:
         """
         Convert a FastMCP tool object into MCPTune's ToolSpec format.
@@ -105,7 +102,6 @@ class FastMCPAdapter(MCPAdapter):
             parameters=parameters,
             raw_input_schema=schema,
         )
-
 
     def _normalize_response(self, result) -> dict:
         """
