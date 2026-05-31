@@ -1,3 +1,12 @@
+"""Recursive structural sampler for complex JSON Schema fragments.
+
+This sampler composes primitive sampling with structured recursion and an
+optional semantic sampler that can provide context-aware values for
+known parameters. The sampler tries to respect schema hints such as
+``default``, ``enum``, ``anyOf``/``oneOf``, nullable types, and object
+properties.
+"""
+
 import random
 from typing import Any
 
@@ -6,6 +15,8 @@ from .primitive import PrimitiveSampler
 
 
 class RecursiveSampler(ArgumentSampler):
+    """Sampler that recursively constructs objects/arrays per schema."""
+
     MAX_DEPTH = 10
 
     def __init__(self, rng=None, semantic_sampler=None):
@@ -20,6 +31,17 @@ class RecursiveSampler(ArgumentSampler):
         tool_name: str = "",
         tool_description: str = "",
     ) -> Any:
+        """Produce a value matching `schema` using recursion.
+
+        Parameters
+        ----------
+        schema:
+            JSON Schema fragment describing the expected value.
+        depth:
+            Current recursion depth (used to enforce `MAX_DEPTH`).
+        tool_name, tool_description:
+            Optional metadata passed to the semantic sampler.
+        """
         if depth >= self.MAX_DEPTH:
             return self._fallback(schema)
 
@@ -55,8 +77,12 @@ class RecursiveSampler(ArgumentSampler):
         tool_name: str,
         tool_description: str,
     ) -> dict[str, Any]:
-        """Per-parameter composition: semantic sampler fills what it knows,
-        structural sampling fills the rest."""
+        """Sample object properties, combining semantic and structural values.
+
+        The semantic sampler is consulted first for known properties; the
+        structural sampler fills required and probabilistically chosen
+        optional properties.
+        """
         properties = schema.get("properties", {})
         required = set(schema.get("required", []))
 
@@ -90,6 +116,7 @@ class RecursiveSampler(ArgumentSampler):
         )
 
     def _sample_nullable(self, schema: dict, depth: int) -> Any:
+        """Randomly return `None` for nullable schemas, otherwise sample."""
         if self.rng.random() < 0.5:
             return None
         new_schema = {k: v for k, v in schema.items() if k != "nullable"}
@@ -99,6 +126,7 @@ class RecursiveSampler(ArgumentSampler):
         return self.sample(new_schema, depth + 1)
 
     def _sample_array(self, schema: dict, depth: int) -> list:
+        """Sample an array of items according to `items` schema."""
         item_schema = schema.get("items", {})
         min_items = schema.get("minItems", 1)
         max_items = schema.get("maxItems", 5)
@@ -106,6 +134,7 @@ class RecursiveSampler(ArgumentSampler):
         return [self.sample(item_schema, depth + 1) for _ in range(length)]
 
     def _fallback(self, schema: dict) -> Any:
+        """Return a simple fallback value when sampling limits are reached."""
         t = schema.get("type")
         if t == "object":
             return {}

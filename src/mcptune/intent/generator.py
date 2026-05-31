@@ -1,11 +1,21 @@
+"""Tiny intent generator for quick, dependency-free examples.
+
+This module provides a low-effort heuristic that turns a tool name
+into a short natural-language request. It is primarily useful for
+tests and examples where a full LLM-backed intent synthesizer is not
+available.
+"""
+
 import random
 
 from mcptune.schema import ToolSpec
 
 
 class IntentGenerator:
-    """
-    Generates natural language user queries from tool schemas.
+    """Heuristic intent generator.
+
+    The generator uses a seeded RNG so results are deterministic when a
+    `seed` is provided.
     """
 
     def __init__(self, seed: int = 0):

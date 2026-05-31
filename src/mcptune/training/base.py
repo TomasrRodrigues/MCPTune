@@ -1,9 +1,19 @@
+"""Training backend interface.
+
+Defines the abstract `TrainerBackend` that concrete training backends
+must implement. The interface is intentionally small: implementors
+should provide `train` to consume a dataset and return a `TrainedModel`,
+and `save` to persist artifacts.
+"""
+
 from abc import ABC, abstractmethod
 
 from .types import TrainedModel
 
 
 class TrainerBackend(ABC):
+    """Abstract trainer backend interface."""
+
     @abstractmethod
     def train(
         self,
@@ -11,7 +21,8 @@ class TrainerBackend(ABC):
         dataset,
         config: dict | None = None,
     ) -> TrainedModel:
-        pass
+        """Train on `dataset` and return a `TrainedModel` descriptor."""
+        raise NotImplementedError()
 
     @abstractmethod
     def save(
@@ -19,4 +30,5 @@ class TrainerBackend(ABC):
         model: TrainedModel,
         path: str,
     ) -> None:
-        pass
+        """Persist `model` to `path` (backend-specific)."""
+        raise NotImplementedError()

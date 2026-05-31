@@ -1,3 +1,11 @@
+"""Semantic sampling helpers for producing context-aware argument values.
+
+This module wraps local lookup heuristics and optional LLM-backed
+generation via the shared `LLMClient`. It returns a partial mapping of
+parameter names to plausible values; the structural sampler fills in
+anything that remains.
+"""
+
 import json
 from collections.abc import Callable
 from importlib.resources import files
@@ -10,11 +18,15 @@ from .lookups import lookup_value
 
 
 class SemanticSampler:
-    """Generates semantically plausible argument values from schema metadata.
+    """Generate semantically plausible argument values.
 
-    Composes with the recursive sampler: this class returns a partial dict
-    containing only the parameters it recognizes; the recursive sampler
-    structurally samples whatever's missing.
+    The sampler supports three modes:
+    - ``local``: use name/format lookups defined in `lookups.py`
+    - LLM backends (``ollama``, ``transformers``): call out to `LLMClient`
+    - ``none``: disable semantic sampling
+
+    When an LLM backend is selected, results are cached per-tool to
+    avoid repeated calls during dataset construction.
     """
 
     def __init__(
@@ -41,6 +53,11 @@ class SemanticSampler:
         tool_description: str,
         properties: dict[str, Any],
     ) -> dict[str, Any]:
+        """Generate a dict of parameter -> plausible value for `properties`.
+
+        Returns an empty dict if semantic sampling is disabled or no
+        values could be generated.
+        """
         if not properties or self.backend == "none":
             return {}
 

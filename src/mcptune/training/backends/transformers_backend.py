@@ -1,8 +1,17 @@
+"""Lightweight Transformers training backend placeholder.
+
+This backend is a stub used by tests and examples. It does not run
+actual training; instead it returns a `TrainedModel` descriptor and
+tracks the save path when requested.
+"""
+
 from ..base import TrainerBackend
 from ..types import TrainedModel
 
 
 class TransformersTrainerBackend(TrainerBackend):
+    """Placeholder trainer that records metadata without training."""
+
     def train(
         self,
         model_name: str,

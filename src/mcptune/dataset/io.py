@@ -1,3 +1,11 @@
+"""I/O helpers for reading and writing dataset JSONL files.
+
+This module provides small, dependency-free helpers used by the
+pipeline to persist and load training datasets produced by MCPTune.
+The on-disk format is one JSON object per line with a top-level
+``schema_version`` field to allow future compatibility handling.
+"""
+
 import json
 from dataclasses import asdict
 from pathlib import Path
@@ -9,6 +17,11 @@ SCHEMA_VERSION = 1
 
 
 def write_jsonl(rows: list[DatasetRow], path: str | Path) -> None:
+    """Write a list of `DatasetRow` objects to a JSONL file.
+
+    Each row is serialized via ``dataclasses.asdict`` and annotated with
+    a ``schema_version`` to make future migrations possible.
+    """
     path = Path(path)
     with path.open("w", encoding="utf-8") as f:
         for row in rows:
@@ -18,6 +31,16 @@ def write_jsonl(rows: list[DatasetRow], path: str | Path) -> None:
 
 
 def read_jsonl(path: str | Path, strict: bool = True) -> list[DatasetRow]:
+    """Read a JSONL dataset file and return validated `DatasetRow` objects.
+
+    Parameters
+    ----------
+    path:
+        Path to the JSONL file.
+    strict:
+        If True, validation errors will raise and abort reading. If False,
+        invalid rows are skipped.
+    """
     path = Path(path)
     rows: list[DatasetRow] = []
 

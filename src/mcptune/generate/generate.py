@@ -1,3 +1,11 @@
+"""In-process HF generator helpers used for local inference/testing.
+
+This module provides a small convenience wrapper around HuggingFace
+transformers to run generation locally when needed. It is not used by
+the main MCPTune pipeline by default, but is helpful for experiments
+and demonstrations.
+"""
+
 import gc
 
 import torch
@@ -5,11 +13,13 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 class Generator:
+    """Simple in-process model loader and generator.
+
+    Note: loading large models may consume substantial RAM/VRAM.
+    """
+
     def __init__(self, model_name="Qwen/Qwen2.5-1.5B-Instruct"):
-        """
-        Initializes the model by pulling it directly from Hugging Face.
-        No external apps or background servers required.
-        """
+        """Load tokenizer and model from HuggingFace Hub."""
         print(f"Loading tokenizer and model for {model_name}...")
 
         # Pulls the text-processing tokenizer
@@ -24,10 +34,7 @@ class Generator:
         print("Model loaded successfully into Python process memory!")
 
     def generate_intent(self, tool, arguments):
-        """
-        Replaces 'ollama.chat'. Formats the instruction, runs inference,
-        and extracts the natural language response.
-        """
+        """Produce a user intent string for `tool` and `arguments`."""
         # Constructing the instruction prompt
         prompt = f"""Generate a normal language user prompt to execute this tool and arguments.
         
@@ -57,7 +64,6 @@ class Generator:
             )
 
         # Decode the numbers back into a human-readable string
-        # Grab the input IDs safely using dictionary notation
         input_ids_structure = inputs["input_ids"]
 
         # Handle both PyTorch tensors (real run) and nested lists (mocked test)
@@ -74,6 +80,7 @@ class Generator:
         return response_text.strip()
 
     def generate_output(self, input, tool, arguments):
+        """Generate a tool output given a user `input`, `tool`, and `arguments`."""
         prompt = f"""
             Based on this input, the tool and its arguments, generate the output
             Tool: {tool.name} - {tool.description}
@@ -113,9 +120,7 @@ class Generator:
         return response_text.strip()
 
     def delete(self):
-        """
-        Explicitly clears the model out of system RAM or GPU VRAM.
-        """
+        """Free model and tokenizer resources and run garbage collection."""
         del self.model
         del self.tokenizer
 

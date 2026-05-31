@@ -1,11 +1,23 @@
+"""Validation helpers for dataset rows.
+
+Provides a small, explicit validation routine used when loading JSONL
+dataset files. The checks are intentionally conservative: they verify
+presence and types of required fields and ensure optional fields have
+acceptable primitive types.
+"""
+
 from typing import Any
 
 
 class DatasetValidationError(Exception):
-    pass
+    """Raised when a dataset row fails validation."""
 
 
 def validate_dataset_row_dict(data: dict[str, Any]) -> None:
+    """Validate a deserialized dataset row dictionary.
+
+    Raises ``DatasetValidationError`` on any validation failure.
+    """
     required_fields = ["tool_name", "arguments", "request"]
 
     for field in required_fields:
