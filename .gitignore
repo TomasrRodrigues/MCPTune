@@ -36,3 +36,5 @@ Thumbs.db
 .idea/
 
 .hypothesis/
+
+.mcptune-demo-output

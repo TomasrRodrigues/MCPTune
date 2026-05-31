@@ -9,7 +9,7 @@ This document covers the practical workflow. For project goals and roadmap, see 
 Requires Python 3.10 or newer.
 
 ​```bash
-git clone https://github.com/YOUR_ORG/mcptune
+git clone https://github.com/TomasrRodrigues/mcptune
 cd mcptune
 python -m venv .venv
 source .venv/bin/activate
