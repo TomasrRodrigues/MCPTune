@@ -52,8 +52,8 @@ def sample_row_no_response():
 
 
 @pytest.mark.unit
-def test_registry_has_four_formats():
-    assert set(FORMATS) == {"openai", "sharegpt", "trl", "anthropic"}
+def test_registry_contains_expected_formats():
+    assert FORMATS.keys() >= {"tool_use", "openai", "sharegpt", "trl", "anthropic"}
 
 
 @pytest.mark.unit

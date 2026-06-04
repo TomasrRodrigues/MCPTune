@@ -25,6 +25,7 @@ class MockTrainerBackend(TrainerBackend):
         model_name: str,
         dataset,
         config: dict | None = None,
+        tools=None,
     ) -> TrainedModel:
         return TrainedModel(
             backend="mock",
@@ -32,6 +33,7 @@ class MockTrainerBackend(TrainerBackend):
                 "model_name": model_name,
                 "num_examples": len(dataset),
                 "config": config or {},
+                "num_tools": len(tools) if tools else 0,
             },
         )
 

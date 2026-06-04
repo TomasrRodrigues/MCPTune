@@ -1,20 +1,12 @@
 """Real fine-tuning via HuggingFace transformers + PEFT (LoRA).
 
-This is the reference TrainerBackend implementation. It:
-  1. Converts DatasetRow -> message format via mcptune.formats
-  2. Applies the tokenizer's chat template to produce training text
-  3. Wraps the base model in a LoRA adapter via PEFT
-  4. Runs a standard HuggingFace Trainer loop
-  5. Saves the adapter weights (small) rather than the full model
+Reference TrainerBackend. Converts DatasetRow -> the tool_use format
+(tools in context + structured calls), renders via the tokenizer chat
+template with tools=, attaches a LoRA adapter, runs a Trainer loop, and
+saves the adapter (not the full model).
 
-Defaults are tuned for small models / quick iteration. Override via
-the `config` dict passed to train().
-
-A single backend instance trains and saves one model at a time. save()
-persists whichever model train() most recently produced; to train
-multiple models, instantiate one backend per training job.
-
-Requires mcptune[transformers].
+A single instance trains/saves one model at a time. Requires
+mcptune[transformers].
 """
 
 from __future__ import annotations
@@ -27,7 +19,7 @@ from ..base import TrainerBackend
 from ..types import TrainedModel
 
 DEFAULT_CONFIG = {
-    "format": "trl",
+    "format": "tool_use",  # was "trl" — native tool-use is the training default
     "lora_rank": 8,
     "lora_alpha": 16,
     "lora_dropout": 0.05,
@@ -52,6 +44,7 @@ class TransformersTrainerBackend(TrainerBackend):
         model_name: str,
         dataset: list[DatasetRow],
         config: dict | None = None,
+        tools=None,
     ) -> TrainedModel:
         try:
             import torch
@@ -77,29 +70,25 @@ class TransformersTrainerBackend(TrainerBackend):
 
         merged = {**DEFAULT_CONFIG, **(config or {})}
 
-        # 1. Convert DatasetRow -> training-format message rows
-        message_rows = convert(dataset, merged["format"])
+        # 1. Convert DatasetRow -> training-format rows. tool_use needs the
+        #    available tools to render into context; convert() raises if the
+        #    format requires them and none were passed.
+        message_rows = convert(dataset, merged["format"], tools=tools)
 
-        # 2. Load tokenizer and base model
+        # 2. Tokenizer + base model
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
-
         if tokenizer.chat_template is None:
             raise ValueError(
-                f"Tokenizer for {model_name!r} has no chat_template. "
-                "Pick a model with a chat template (Qwen, Llama 3, "
-                "SmolLM-Instruct, etc.), or set tokenizer.chat_template "
-                "manually before calling train()."
+                f"Tokenizer for {model_name!r} has no chat_template. Pick a "
+                "chat/instruct model (Qwen, Llama 3, SmolLM-Instruct, ...)."
             )
 
         torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
-        model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            torch_dtype=torch_dtype,
-        )
+        model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch_dtype)
 
-        # 3. Attach LoRA adapter
+        # 3. LoRA
         lora_config = LoraConfig(
             r=merged["lora_rank"],
             lora_alpha=merged["lora_alpha"],
@@ -108,28 +97,27 @@ class TransformersTrainerBackend(TrainerBackend):
         )
         model = get_peft_model(model, lora_config)
 
-        # 4. Tokenize via chat template
+        # 4. Pre-tokenize: render each row's chat template (with tools=) and
+        #    tokenize in Python, then build the HF dataset from numeric rows.
+        #    Avoids Arrow inferring a schema for the nested messages/tools cols.
         max_length = merged["max_length"]
-
-        def tokenize(example: dict) -> dict:
+        tokenized_rows = []
+        for ex in message_rows:
             text = tokenizer.apply_chat_template(
-                example["messages"],
+                ex["messages"],
+                tools=ex.get("tools"),
                 tokenize=False,
                 add_generation_prompt=False,
             )
-            tokens = tokenizer(
-                text,
-                truncation=True,
-                max_length=max_length,
-                padding="max_length",
+            tokens = tokenizer(text, truncation=True, max_length=max_length, padding="max_length")
+            tokenized_rows.append(
+                {
+                    "input_ids": tokens["input_ids"],
+                    "attention_mask": tokens["attention_mask"],
+                    "labels": list(tokens["input_ids"]),
+                }
             )
-            tokens["labels"] = list(tokens["input_ids"])
-            return tokens
-
-        hf_dataset = HFDataset.from_list(message_rows).map(
-            tokenize,
-            remove_columns=["messages"],
-        )
+        hf_dataset = HFDataset.from_list(tokenized_rows)
 
         # 5. Train
         training_args = TrainingArguments(
@@ -143,17 +131,15 @@ class TransformersTrainerBackend(TrainerBackend):
             report_to="none",
             remove_unused_columns=False,
         )
-
+        # TODO(transformers 5.x, Gap J): tokenizer= -> processing_class=
         trainer = Trainer(
             model=model,
             args=training_args,
             train_dataset=hf_dataset,
             tokenizer=tokenizer,
         )
-
         trainer.train()
 
-        # 6. Stash refs for save()
         self._last_trainer = trainer
         self._last_tokenizer = tokenizer
 
@@ -162,6 +148,7 @@ class TransformersTrainerBackend(TrainerBackend):
             metadata={
                 "base_model": model_name,
                 "num_examples": len(dataset),
+                "num_tools": len(tools) if tools else 0,
                 "format": merged["format"],
                 "lora_rank": merged["lora_rank"],
                 "lora_alpha": merged["lora_alpha"],

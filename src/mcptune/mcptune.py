@@ -45,6 +45,7 @@ class MCPTune:
         )
 
         self.trainer = trainer
+        self._tools: list[ToolSpec] | None = None  # cached by build_dataset for train()
 
     async def discover(self) -> list[ToolSpec]:
         return await self.adapter.discover_tools()
@@ -79,8 +80,9 @@ class MCPTune:
         if tools is None:
             tools = asyncio.run(self.discover())
 
-        dataset = []
+        dataset: list[DatasetRow] = []
         tools = sorted(tools, key=lambda t: t.name)
+        self._tools = tools  # remember the tool surface for train()
 
         for tool in tools:
             for sample_index in range(samples_per_tool):
@@ -120,13 +122,14 @@ class MCPTune:
             },
         }
 
-    def train(self, dataset, config=None):
+    # replace train()
+    def train(self, dataset, config=None, tools=None):
         if self.trainer is None:
             raise RuntimeError(
                 "No trainer configured. Pass a TrainerBackend instance via "
                 "MCPTune(..., trainer=...)."
             )
-        return self.trainer.train(self.model, dataset, config)
+        return self.trainer.train(self.model, dataset, config, tools=tools or self._tools)
 
     def evaluate(self, model):
         # TODO: Phase 5 — evaluation pipeline.

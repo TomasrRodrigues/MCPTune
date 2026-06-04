@@ -20,8 +20,13 @@ class TrainerBackend(ABC):
         model_name: str,
         dataset,
         config: dict | None = None,
+        tools=None,
     ) -> TrainedModel:
-        """Train on `dataset` and return a `TrainedModel` descriptor."""
+        """Train on `dataset` and return a `TrainedModel` descriptor.
+
+        `tools` is the available ToolSpec set, required by formats that
+        render tool definitions into context (e.g. "tool_use").
+        """
         raise NotImplementedError()
 
     @abstractmethod
