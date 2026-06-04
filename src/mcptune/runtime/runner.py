@@ -55,7 +55,7 @@ class TransformersModelRunner:
             gen_kwargs.update(do_sample=False)
         with torch.no_grad():
             output_ids = self.model.generate(**inputs, **gen_kwargs)
-        new_tokens = output_ids[0][inputs["input_ids"].shape[-1]:]
+        new_tokens = output_ids[0][inputs["input_ids"].shape[-1] :]
         # NOTE: Qwen2.5 renders <tool_call> as literal text, so skip_special_tokens
         # is safe. If a model defines it as a special token, calls will vanish from
         # the decoded string — flip this to False for that model family.

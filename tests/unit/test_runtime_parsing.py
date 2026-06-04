@@ -11,8 +11,10 @@ def test_parses_single_qwen_call():
 
 
 def test_parses_multiple_calls():
-    text = ('<tool_call>{"name": "a", "arguments": {}}</tool_call>'
-            '<tool_call>{"name": "b", "arguments": {"x": 1}}</tool_call>')
+    text = (
+        '<tool_call>{"name": "a", "arguments": {}}</tool_call>'
+        '<tool_call>{"name": "b", "arguments": {"x": 1}}</tool_call>'
+    )
     calls = parse_tool_calls(text)
     assert [c.name for c in calls] == ["a", "b"]
     assert calls[1].arguments == {"x": 1}
@@ -34,7 +36,8 @@ def test_unknown_format_raises():
 def test_function_schema_preserves_raw_schema():
     raw = {"type": "object", "properties": {"city": {"type": "string"}}, "required": ["city"]}
     tool = ToolSpec(
-        name="get_weather", description="Get weather",
+        name="get_weather",
+        description="Get weather",
         parameters=[ToolParameter("city", {"type": "string"}, True, "")],
         raw_input_schema=raw,
     )

@@ -7,6 +7,7 @@ from mcptune.runtime import run
 
 class ScriptedRunner:
     """Returns canned outputs in order — stands in for a model."""
+
     def __init__(self, outputs):
         self.outputs, self.i = list(outputs), 0
 
@@ -30,18 +31,19 @@ def _server():
 async def test_executes_tool_and_feeds_result_back():
     adapter = FastMCPAdapter(_server())
     tools = await adapter.discover_tools()
-    runner = ScriptedRunner([
-        '<tool_call>{"name": "get_weather", "arguments": {"city": "Lisbon"}}</tool_call>',
-        "It's sunny in Lisbon.",
-    ])
+    runner = ScriptedRunner(
+        [
+            '<tool_call>{"name": "get_weather", "arguments": {"city": "Lisbon"}}</tool_call>',
+            "It's sunny in Lisbon.",
+        ]
+    )
 
     result = await run(runner, adapter, "weather in Lisbon?", tools)
 
     assert result.stopped_reason == "final_answer"
     assert result.final_text == "It's sunny in Lisbon."
     assert [c.name for c in result.tool_calls] == ["get_weather"]
-    assert any(m["role"] == "tool" and "Sunny in Lisbon" in m["content"]
-               for m in result.messages)
+    assert any(m["role"] == "tool" and "Sunny in Lisbon" in m["content"] for m in result.messages)
 
 
 @pytest.mark.asyncio
@@ -60,10 +62,12 @@ async def test_max_turns_cap():
 async def test_unknown_tool_error_fed_back_not_raised():
     adapter = FastMCPAdapter(_server())
     tools = await adapter.discover_tools()
-    runner = ScriptedRunner([
-        '<tool_call>{"name": "nonexistent", "arguments": {}}</tool_call>',
-        "Sorry, I couldn't do that.",
-    ])
+    runner = ScriptedRunner(
+        [
+            '<tool_call>{"name": "nonexistent", "arguments": {}}</tool_call>',
+            "Sorry, I couldn't do that.",
+        ]
+    )
     result = await run(runner, adapter, "do x", tools)
     assert result.stopped_reason == "final_answer"
     assert any(m["role"] == "tool" and "Error" in m["content"] for m in result.messages)
