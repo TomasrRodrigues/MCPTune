@@ -66,6 +66,8 @@ def read_jsonl(path: str | Path, strict: bool = True) -> list[DatasetRow]:
                 error=data.get("error"),
                 user_intent=data.get("user_intent"),
                 intent_prompt_version=data.get("intent_prompt_version"),
+                final_answer=data.get("final_answer"),
+                answer_prompt_version=data.get("answer_prompt_version"),
             )
             rows.append(row)
     return rows

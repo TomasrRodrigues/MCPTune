@@ -1,0 +1,97 @@
+"""Synthesize the assistant's final natural-language answer from a tool result.
+
+Mirrors IntentSynthesizer: same backends, same template-fallback +
+provenance contract (prompt_version is None when the fallback ran).
+Given the user's intent, the call, and the tool's result, produce the
+reply the assistant would give — the turn that teaches the model to USE
+a result, not just request one.
+"""
+
+from __future__ import annotations
+
+import json
+from collections.abc import Callable
+from dataclasses import dataclass
+from importlib.resources import files
+from typing import Any
+
+from mcptune.llm.client import LLMClient
+from mcptune.schema.tools import ToolSpec
+
+
+@dataclass(frozen=True)
+class AnswerResult:
+    answer: str
+    prompt_version: str | None
+
+
+class AnswerSynthesizer:
+    def __init__(
+        self,
+        backend: str = "none",
+        prompt_version: str = "answer_v1",
+        model: str | None = None,
+        temperature: float = 0.7,
+        llm_call: Callable[[str], str] | None = None,
+        ollama_host: str | None = None,
+    ):
+        self.backend = backend
+        self.prompt_version = prompt_version
+        self.model = model
+        self.temperature = temperature
+        self.ollama_host = ollama_host
+        self._llm_call = llm_call
+        self._client: LLMClient | None = None
+
+    def synthesize(
+        self, tool: ToolSpec, arguments: dict[str, Any], result_text: str
+    ) -> AnswerResult:
+        if self.backend == "none":
+            return AnswerResult(self._template_fallback(tool, result_text), None)
+        try:
+            prompt = self._build_prompt(tool, arguments, result_text)
+            response = self._call_llm(prompt)
+        except Exception as e:
+            print(f"[MCPTune Warn] Answer synthesis failed, using template: {e}")
+            return AnswerResult(self._template_fallback(tool, result_text), None)
+
+        text = response.strip()
+        if not text:
+            return AnswerResult(self._template_fallback(tool, result_text), None)
+        return AnswerResult(text, self.prompt_version)
+
+    # ------------------------------------------------------------------
+
+    def _call_llm(self, prompt: str) -> str:
+        if self._llm_call is not None:
+            return self._llm_call(prompt)
+        if self._client is None:
+            self._client = LLMClient(
+                backend=self.backend,
+                model=self.model,
+                temperature=self.temperature,
+                ollama_host=self.ollama_host,
+            )
+        return self._client.generate(prompt, json_mode=False)
+
+    def _build_prompt(
+        self, tool: ToolSpec, arguments: dict[str, Any], result_text: str
+    ) -> str:
+        template = (
+            files("mcptune.synthesis")
+            .joinpath("prompts", f"{self.prompt_version}.txt")
+            .read_text(encoding="utf-8")
+        )
+        return (
+            template.replace("{tool_name}", tool.name)
+            .replace("{tool_description}", (tool.description or "(no description)")[:800])
+            .replace("{arguments_json}", json.dumps(arguments, indent=2))
+            .replace("{result_text}", result_text[:1200])
+        )
+
+    @staticmethod
+    def _template_fallback(tool: ToolSpec, result_text: str) -> str:
+        snippet = result_text.strip()
+        if snippet:
+            return f"The {tool.name} call returned: {snippet}"
+        return f"I've completed the {tool.name} request."

@@ -37,3 +37,5 @@ class DatasetRow:
     error: str | None = None
     user_intent: str | None = None
     intent_prompt_version: str | None = None
+    final_answer: str | None = None
+    answer_prompt_version: str | None = None

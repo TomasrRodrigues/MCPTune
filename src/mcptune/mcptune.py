@@ -9,6 +9,7 @@ from .sampling.semantic import SemanticSampler
 from .schema import ToolSpec
 from .schema.dataset import DatasetRow
 from .synthesis.intent import IntentSynthesizer
+from .synthesis.answer import AnswerSynthesizer
 
 
 class MCPTune:
@@ -42,6 +43,11 @@ class MCPTune:
             backend=intent_backend,
             model=intent_model,
             llm_call=intent_llm_call,
+        )
+
+        self.answer_synthesizer = AnswerSynthesizer(
+            backend=intent_backend,   # shares the intent backend/model for now (Gap H unifies later)
+            model=intent_model,
         )
 
         self.trainer = trainer
@@ -162,3 +168,44 @@ class MCPTune:
         raw = f"{self.seed}:{tool_name}:{sample_index}".encode()
         digest = hashlib.sha256(raw).digest()
         return random.Random(int.from_bytes(digest[:8], "big"))
+
+    # new method, alongside discover()
+    async def execute(self, dataset, *, synthesize_answers: bool = True):
+        """Populate response/error by calling each row's tool against the
+        server, and (optionally) synthesize the assistant's final answer.
+
+        build_dataset() is offline (sampling + intent). This is the
+        online pass: it hits the MCP server and, if enabled, the answer
+        LLM. Rows left un-executed still emit valid 2-turn data; running
+        this upgrades them to the full call -> result -> answer loop.
+        """
+        for row in dataset:
+            try:
+                response = await self.adapter.call_tool(row.tool_name, row.arguments)
+                row.response = response
+                row.error = None
+            except Exception as e:
+                row.response = None
+                row.error = f"{type(e).__name__}: {e}"
+
+            if synthesize_answers and row.error is None:
+                tool = next((t for t in (self._tools or []) if t.name == row.tool_name), None)
+                result_text = self._result_to_text(row.response)
+                if tool is not None:
+                    res = self.answer_synthesizer.synthesize(tool, row.arguments, result_text)
+                    row.final_answer = res.answer
+                    row.answer_prompt_version = res.prompt_version
+        return dataset
+
+    @staticmethod
+    def _result_to_text(response) -> str:
+        if not isinstance(response, dict):
+            return "" if response is None else str(response)
+        blocks = response.get("content") or []
+        texts = [b.get("text", "") for b in blocks if isinstance(b, dict) and b.get("type") == "text"]
+        joined = "\n".join(t for t in texts if t)
+        if joined:
+            return joined
+        sc = response.get("structured_content")
+        import json as _json
+        return _json.dumps(sc) if sc is not None else ""
