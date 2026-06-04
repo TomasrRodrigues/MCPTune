@@ -55,6 +55,7 @@ def tool_use(rows: list[DatasetRow], tools: list[ToolSpec]) -> list[dict]:
                     {"role": "user", "content": user_message},
                     {
                         "role": "assistant",
+                        "content": "",
                         "tool_calls": [
                             {
                                 "type": "function",

@@ -33,6 +33,48 @@ DEFAULT_CONFIG = {
 }
 
 
+def _tokenize_example(tokenizer, ex: dict, max_length: int) -> dict:
+    """Render one conversation to training tokens with SFT label masking.
+
+    Loss is computed only on the assistant completion: prompt tokens
+    (tools context + user turn) and padding are set to -100. With tool
+    schemas now in context the prompt dominates the sequence, so without
+    this the model mostly learns to reproduce tool definitions it never
+    needs to generate.
+
+    Assumes the final message is the assistant turn to supervise (true
+    for the tool_use format: [user, assistant]). For other shapes it
+    supervises everything except padding. Issue 3 adds a tool turn + a
+    final answer turn and will generalize this to supervise ALL assistant
+    turns.
+    """
+    messages = ex["messages"]
+    tools_ctx = ex.get("tools")
+
+    full_text = tokenizer.apply_chat_template(
+        messages, tools=tools_ctx, tokenize=False, add_generation_prompt=False
+    )
+    tokens = tokenizer(full_text, truncation=True, max_length=max_length, padding="max_length")
+    input_ids = tokens["input_ids"]
+    attention_mask = tokens["attention_mask"]
+
+    if messages and messages[-1].get("role") == "assistant":
+        prompt_text = tokenizer.apply_chat_template(
+            messages[:-1], tools=tools_ctx, tokenize=False, add_generation_prompt=True
+        )
+        prompt_len = len(
+            tokenizer(prompt_text, truncation=True, max_length=max_length)["input_ids"]
+        )
+    else:
+        prompt_len = 0  # legacy/raw formats: supervise all non-pad tokens
+
+    labels = [
+        -100 if (i < prompt_len or attention_mask[i] == 0) else tok
+        for i, tok in enumerate(input_ids)
+    ]
+    return {"input_ids": input_ids, "attention_mask": attention_mask, "labels": labels}
+
+
 class TransformersTrainerBackend(TrainerBackend):
     def __init__(self, output_dir: str = "./mcptune-checkpoints"):
         self.output_dir = output_dir
@@ -97,26 +139,19 @@ class TransformersTrainerBackend(TrainerBackend):
         )
         model = get_peft_model(model, lora_config)
 
-        # 4. Pre-tokenize: render each row's chat template (with tools=) and
-        #    tokenize in Python, then build the HF dataset from numeric rows.
-        #    Avoids Arrow inferring a schema for the nested messages/tools cols.
+        # 4. Tokenize with SFT label masking (loss on the assistant call only).
         max_length = merged["max_length"]
-        tokenized_rows = []
-        for ex in message_rows:
-            text = tokenizer.apply_chat_template(
-                ex["messages"],
-                tools=ex.get("tools"),
-                tokenize=False,
-                add_generation_prompt=False,
+        tokenized_rows = [_tokenize_example(tokenizer, ex, max_length) for ex in message_rows]
+
+        fully_masked = sum(1 for r in tokenized_rows if all(t == -100 for t in r["labels"]))
+        if fully_masked:
+            print(
+                f"[MCPTune Warn] {fully_masked}/{len(tokenized_rows)} examples had no "
+                f"supervised tokens — the completion was truncated at "
+                f"max_length={max_length}. They contribute no training signal; "
+                "raise max_length."
             )
-            tokens = tokenizer(text, truncation=True, max_length=max_length, padding="max_length")
-            tokenized_rows.append(
-                {
-                    "input_ids": tokens["input_ids"],
-                    "attention_mask": tokens["attention_mask"],
-                    "labels": list(tokens["input_ids"]),
-                }
-            )
+
         hf_dataset = HFDataset.from_list(tokenized_rows)
 
         # 5. Train
