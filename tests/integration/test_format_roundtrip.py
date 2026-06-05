@@ -8,7 +8,7 @@ download, no weights); skips cleanly if transformers/network absent.
 
 import pytest
 
-from mcptune.formats.tool_use import tool_use
+from mcptune.formats.tool_use import ToolUseFormat
 from mcptune.runtime.parsing import ToolCall, parse_tool_calls
 from mcptune.schema.dataset import DatasetRow
 from mcptune.schema.tools import ToolParameter, ToolSpec
@@ -41,7 +41,7 @@ def test_emit_render_parse_roundtrip():
         user_intent="What's the weather in Lisbon?",
     )
 
-    emitted = tool_use([row], [tool])[0]
+    emitted = ToolUseFormat().format_tool([row], [tool])[0]
     text = tokenizer.apply_chat_template(
         emitted["messages"],
         tools=emitted["tools"],

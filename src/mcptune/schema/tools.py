@@ -13,7 +13,7 @@ class ToolParameter:
     """Definition of a single tool parameter."""
 
     name: str
-    schema: dict
+    schema: dict[str, Any]
     required: bool
     description: str
 

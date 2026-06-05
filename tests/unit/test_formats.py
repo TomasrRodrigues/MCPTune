@@ -4,11 +4,11 @@ import pytest
 
 from mcptune.formats import (
     FORMATS,
-    anthropic_tool_use,
+    AnthropicFormat,
+    OpenAIFormat,
+    ShareGPTFormat,
+    TRLFormat,
     convert,
-    openai_messages,
-    sharegpt,
-    trl_sft,
 )
 from mcptune.schema.dataset import DatasetRow
 
@@ -58,7 +58,7 @@ def test_registry_contains_expected_formats():
 
 @pytest.mark.unit
 def test_convert_dispatches_to_registered_format(sample_row):
-    assert convert([sample_row], "openai") == openai_messages([sample_row])
+    assert convert([sample_row], "openai") == OpenAIFormat().format_tool([sample_row])
 
 
 @pytest.mark.unit
@@ -80,30 +80,30 @@ def test_convert_unknown_format_lists_available():
 
 @pytest.mark.unit
 def test_openai_emits_one_conversation_per_row(sample_row):
-    assert len(openai_messages([sample_row, sample_row])) == 2
+    assert len(OpenAIFormat().format_tool([sample_row, sample_row])) == 2
 
 
 @pytest.mark.unit
 def test_openai_three_messages_user_assistant_tool(sample_row):
-    conv = openai_messages([sample_row])[0]
+    conv = OpenAIFormat().format_tool([sample_row])[0]
     assert [m["role"] for m in conv["messages"]] == ["user", "assistant", "tool"]
 
 
 @pytest.mark.unit
 def test_openai_user_message_uses_user_intent(sample_row):
-    conv = openai_messages([sample_row])[0]
+    conv = OpenAIFormat().format_tool([sample_row])[0]
     assert conv["messages"][0]["content"] == "What's the weather in Lisbon?"
 
 
 @pytest.mark.unit
 def test_openai_assistant_tool_call_uses_row_request_id(sample_row):
-    conv = openai_messages([sample_row])[0]
+    conv = OpenAIFormat().format_tool([sample_row])[0]
     assert conv["messages"][1]["tool_calls"][0]["id"] == "abc-123"
 
 
 @pytest.mark.unit
 def test_openai_assistant_arguments_are_json_string(sample_row):
-    conv = openai_messages([sample_row])[0]
+    conv = OpenAIFormat().format_tool([sample_row])[0]
     args = conv["messages"][1]["tool_calls"][0]["function"]["arguments"]
     assert isinstance(args, str)
     assert json.loads(args) == {"city": "Lisbon"}
@@ -111,7 +111,7 @@ def test_openai_assistant_arguments_are_json_string(sample_row):
 
 @pytest.mark.unit
 def test_openai_tool_message_carries_response(sample_row):
-    conv = openai_messages([sample_row])[0]
+    conv = OpenAIFormat().format_tool([sample_row])[0]
     tool_msg = conv["messages"][2]
     assert tool_msg["tool_call_id"] == "abc-123"
     assert json.loads(tool_msg["content"]) == {"temp": 22, "conditions": "sunny"}
@@ -119,7 +119,7 @@ def test_openai_tool_message_carries_response(sample_row):
 
 @pytest.mark.unit
 def test_openai_empty_response_becomes_empty_string(sample_row_no_response):
-    conv = openai_messages([sample_row_no_response])[0]
+    conv = OpenAIFormat().format_tool([sample_row_no_response])[0]
     assert conv["messages"][2]["content"] == ""
 
 
@@ -130,35 +130,37 @@ def test_openai_fallback_when_user_intent_missing():
         arguments={},
         request={"jsonrpc": "2.0", "id": "x", "method": "tools/call", "params": {}},
     )
-    conv = openai_messages([row])[0]
+    conv = OpenAIFormat().format_tool([row])[0]
     assert "ping" in conv["messages"][0]["content"]
 
 
 # ---------------------------------------------------------------------------
-# ShareGPT
+# ShareGPTFormat().format_tool
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit
 def test_sharegpt_uses_conversations_field(sample_row):
-    assert "conversations" in sharegpt([sample_row])[0]
+    assert "conversations" in ShareGPTFormat().format_tool([sample_row])[0]
 
 
 @pytest.mark.unit
 def test_sharegpt_uses_from_value_keys(sample_row):
-    for turn in sharegpt([sample_row])[0]["conversations"]:
+    for turn in ShareGPTFormat().format_tool([sample_row])[0]["conversations"]:
         assert set(turn.keys()) == {"from", "value"}
 
 
 @pytest.mark.unit
 def test_sharegpt_role_order_human_gpt_tool(sample_row):
-    convs = sharegpt([sample_row])[0]["conversations"]
+    convs = ShareGPTFormat().format_tool([sample_row])[0]["conversations"]
     assert [t["from"] for t in convs] == ["human", "gpt", "tool"]
 
 
 @pytest.mark.unit
 def test_sharegpt_gpt_turn_contains_tool_call(sample_row):
-    gpt_value = json.loads(sharegpt([sample_row])[0]["conversations"][1]["value"])
+    gpt_value = json.loads(
+        ShareGPTFormat().format_tool([sample_row])[0]["conversations"][1]["value"]
+    )
     assert gpt_value["tool_call"]["name"] == "get_weather"
     assert gpt_value["tool_call"]["arguments"] == {"city": "Lisbon"}
 
@@ -170,12 +172,12 @@ def test_sharegpt_gpt_turn_contains_tool_call(sample_row):
 
 @pytest.mark.unit
 def test_trl_uses_messages_field(sample_row):
-    assert "messages" in trl_sft([sample_row])[0]
+    assert "messages" in TRLFormat().format_tool([sample_row])[0]
 
 
 @pytest.mark.unit
 def test_trl_role_order(sample_row):
-    msgs = trl_sft([sample_row])[0]["messages"]
+    msgs = TRLFormat().format_tool([sample_row])[0]["messages"]
     assert [m["role"] for m in msgs] == ["user", "assistant", "tool"]
 
 
@@ -183,7 +185,7 @@ def test_trl_role_order(sample_row):
 def test_trl_all_content_is_string(sample_row):
     """TRL stringifies everything for chat templates that don't natively
     handle structured tool calls."""
-    for m in trl_sft([sample_row])[0]["messages"]:
+    for m in TRLFormat().format_tool([sample_row])[0]["messages"]:
         assert isinstance(m["content"], str)
 
 
@@ -194,19 +196,19 @@ def test_trl_all_content_is_string(sample_row):
 
 @pytest.mark.unit
 def test_anthropic_uses_messages_field(sample_row):
-    assert "messages" in anthropic_tool_use([sample_row])[0]
+    assert "messages" in AnthropicFormat().format_tool([sample_row])[0]
 
 
 @pytest.mark.unit
 def test_anthropic_role_order_user_assistant_user(sample_row):
     """Anthropic returns tool_result on a user turn, not a separate role."""
-    msgs = anthropic_tool_use([sample_row])[0]["messages"]
+    msgs = AnthropicFormat().format_tool([sample_row])[0]["messages"]
     assert [m["role"] for m in msgs] == ["user", "assistant", "user"]
 
 
 @pytest.mark.unit
 def test_anthropic_assistant_uses_tool_use_block(sample_row):
-    block = anthropic_tool_use([sample_row])[0]["messages"][1]["content"][0]
+    block = AnthropicFormat().format_tool([sample_row])[0]["messages"][1]["content"][0]
     assert block["type"] == "tool_use"
     assert block["id"] == "abc-123"
     assert block["name"] == "get_weather"
@@ -215,6 +217,6 @@ def test_anthropic_assistant_uses_tool_use_block(sample_row):
 
 @pytest.mark.unit
 def test_anthropic_tool_result_block_references_call_id(sample_row):
-    block = anthropic_tool_use([sample_row])[0]["messages"][2]["content"][0]
+    block = AnthropicFormat().format_tool([sample_row])[0]["messages"][2]["content"][0]
     assert block["type"] == "tool_result"
     assert block["tool_use_id"] == "abc-123"

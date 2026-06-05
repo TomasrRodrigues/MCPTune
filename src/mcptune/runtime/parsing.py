@@ -10,12 +10,13 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
 class ToolCall:
     name: str
-    arguments: dict
+    arguments: dict[str, Any]
 
 
 _QWEN_TOOL_CALL_RE = re.compile(r"<tool_call>\s*(.*?)\s*</tool_call>", re.DOTALL)
@@ -31,7 +32,7 @@ def _parse_qwen(text: str) -> list[ToolCall]:
         name = obj.get("name")
         if not isinstance(name, str):
             continue
-        args = obj.get("arguments", {})
+        args: dict[str, Any] = obj.get("arguments", {})
         calls.append(ToolCall(name=name, arguments=args if isinstance(args, dict) else {}))
     return calls
 

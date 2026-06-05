@@ -6,6 +6,8 @@ fast development, testing and when no LLM-backed intent generation
 is available.
 """
 
+from typing import Any
+
 from mcptune.schema.tools import ToolSpec
 
 
@@ -18,7 +20,7 @@ class LocalIntentBackend:
     higher-level `IntentSynthesizer` interface.
     """
 
-    def generate_intent(self, tool: ToolSpec) -> dict:
+    def generate_intent(self, tool: ToolSpec) -> dict[str, Any]:
         """Return a placeholder intent for `tool`.
 
         Parameters

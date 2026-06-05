@@ -12,6 +12,7 @@ Used by:
 from __future__ import annotations
 
 import os
+from typing import Any
 
 
 class LLMClient:
@@ -47,7 +48,7 @@ class LLMClient:
         import httpx  # transitive via fastmcp
 
         model = self.model or "qwen2.5:7b"
-        body: dict = {
+        body: dict[str, Any] = {
             "model": model,
             "prompt": prompt,
             "stream": False,
@@ -83,8 +84,8 @@ class LLMClient:
         model_name = self.model or "Qwen/Qwen2.5-1.5B-Instruct"
 
         if self._hf_model is None or self._hf_model_name != model_name:
-            self._hf_tokenizer = AutoTokenizer.from_pretrained(model_name)
-            self._hf_model = AutoModelForCausalLM.from_pretrained(
+            self._hf_tokenizer: Any = AutoTokenizer.from_pretrained(model_name)
+            self._hf_model: Any = AutoModelForCausalLM.from_pretrained(
                 model_name,
                 torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
                 device_map="auto",

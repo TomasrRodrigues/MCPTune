@@ -8,15 +8,52 @@ chat template with tools=, so the inference prompt matches training.
 
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Any, Protocol
+
+
+class TokenizedInputs(Protocol):
+    def to(self, device: str) -> Any: ...
+
+    def __getitem__(self, key: str) -> Any: ...
+
+
+class TokenizerProtocol(Protocol):
+    chat_template: str | None
+    pad_token_id: int | None
+    eos_token_id: int | None
+
+    def apply_chat_template(
+        self,
+        messages: list[dict[str, str]],
+        *,
+        tools: list[dict[str, Any]] | None,
+        add_generation_prompt: bool,
+        tokenize: bool,
+    ) -> str: ...
+
+    def __call__(self, text: str, *, return_tensors: str) -> TokenizedInputs: ...
+
+    def decode(self, token_ids: Any, *, skip_special_tokens: bool) -> str: ...
+
+
+class ModelProtocol(Protocol):
+    def generate(self, **kwargs: Any) -> Any: ...
 
 
 class ModelRunner(Protocol):
-    def generate(self, messages: list[dict], tools: list[dict]) -> str: ...
+    def generate(self, messages: list[dict[str, str]], tools: list[dict[str, Any]]) -> str: ...
 
 
 class TransformersModelRunner:
-    def __init__(self, model, tokenizer, *, max_new_tokens=256, temperature=0.0, device=None):
+    def __init__(
+        self,
+        model: ModelProtocol,
+        tokenizer: TokenizerProtocol,
+        *,
+        max_new_tokens: int = 256,
+        temperature: float = 0.0,
+        device: str | None = None,
+    ):
         try:
             import torch
         except ImportError as e:
@@ -36,7 +73,7 @@ class TransformersModelRunner:
         self.temperature = temperature
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
 
-    def generate(self, messages: list[dict], tools: list[dict]) -> str:
+    def generate(self, messages: list[dict[str, str]], tools: list[dict[str, Any]]) -> str:
         torch = self._torch
         prompt = self.tokenizer.apply_chat_template(
             messages,
@@ -45,7 +82,7 @@ class TransformersModelRunner:
             tokenize=False,
         )
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
-        gen_kwargs = {
+        gen_kwargs: dict[str, Any] = {
             "max_new_tokens": self.max_new_tokens,
             "pad_token_id": self.tokenizer.pad_token_id or self.tokenizer.eos_token_id,
         }

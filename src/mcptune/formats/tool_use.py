@@ -22,53 +22,67 @@ The tool result and final synthesizing answer are added by Issue 3.
 
 from __future__ import annotations
 
+from typing import Any
+
+from mcptune.formats.base import Format
+
 from ..schema.dataset import DatasetRow
 from ..schema.function_schema import toolspecs_to_function_schemas
 from ..schema.tools import ToolSpec
-from ._common import template_intent
+from ._common import result_to_text, template_intent
 
 
-def tool_use(rows: list[DatasetRow], tools: list[ToolSpec]) -> list[dict]:
-    """Emit native tool-use training rows.
+class ToolUseFormat(Format):
+    needs_tools = True
 
-    `tools` is the FULL available tool surface — rendered into every
-    example so the model learns selection, not just the tools that
-    happen to appear in `rows`.
+    def format_tool(
+        self, rows: list[DatasetRow], tools: list[ToolSpec] | None = None
+    ) -> list[dict[str, Any]]:
+        """Emit native tool-use training rows.
 
-    Returns items shaped {"messages": [...], "tools": [...schemas...]};
-    pass both into tokenizer.apply_chat_template(messages, tools=tools).
-    """
-    if not tools:
-        raise ValueError(
-            "tool_use format requires the available tools to render into "
-            "context (Gap A). Pass the ToolSpec list from discover()."
-        )
+        `tools` is the FULL available tool surface — rendered into every
+        example so the model learns selection, not just the tools that
+        happen to appear in `rows`.
 
-    function_schemas = toolspecs_to_function_schemas(tools)
-    output: list[dict] = []
+        Returns items shaped {"messages": [...], "tools": [...schemas...]};
+        pass both into tokenizer.apply_chat_template(messages, tools=tools).
+        """
+        if not tools:
+            raise ValueError(
+                "tool_use format requires the available tools to render into "
+                "context (Gap A). Pass the ToolSpec list from discover()."
+            )
 
-    for row in rows:
-        user_message = row.user_intent or template_intent(row)
-        output.append(
-            {
-                "messages": [
-                    {"role": "user", "content": user_message},
+        function_schemas = toolspecs_to_function_schemas(tools)
+        output: list[dict[str, Any]] = []
+
+        for row in rows:
+            user_message = row.user_intent or template_intent(row)
+
+            messages: list[dict[str, Any]] = [
+                {"role": "user", "content": user_message},
+                {
+                    "role": "assistant",
+                    "content": "",
+                    "tool_calls": [
+                        {
+                            "type": "function",
+                            "function": {"name": row.tool_name, "arguments": row.arguments},
+                        }
+                    ],
+                },
+            ]
+
+            if row.final_answer and row.error is None:
+                messages.append(
                     {
-                        "role": "assistant",
-                        "content": "",
-                        "tool_calls": [
-                            {
-                                "type": "function",
-                                "function": {
-                                    "name": row.tool_name,
-                                    "arguments": row.arguments,  # dict; template renders it
-                                },
-                            }
-                        ],
-                    },
-                ],
-                "tools": function_schemas,
-            }
-        )
+                        "role": "tool",
+                        "name": row.tool_name,
+                        "content": result_to_text(row.response),
+                    }
+                )
+                messages.append({"role": "assistant", "content": row.final_answer})
 
-    return output
+            output.append({"messages": messages, "tools": function_schemas})
+
+        return output

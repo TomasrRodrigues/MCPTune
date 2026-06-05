@@ -1,6 +1,7 @@
 """Simple descriptor for trained model artifacts."""
 
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -19,4 +20,4 @@ class TrainedModel:
 
     model_path: str | None = None
     backend: str | None = None
-    metadata: dict | None = None
+    metadata: dict[str, Any] | None = None

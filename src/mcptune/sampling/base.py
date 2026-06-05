@@ -6,13 +6,14 @@ fragments used in tool parameter definitions.
 """
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 
 class ArgumentSampler(ABC):
     """Abstract interface for argument samplers."""
 
     @abstractmethod
-    def sample(self, schema: dict) -> any:
+    def sample(self, schema: dict[str, Any]) -> Any:
         """Generate a valid value for a given JSON Schema fragment.
 
         Implementations must return a JSON-serializable value that

@@ -19,14 +19,18 @@ class RecursiveSampler(ArgumentSampler):
 
     MAX_DEPTH = 10
 
-    def __init__(self, rng=None, semantic_sampler=None):
+    def __init__(
+        self,
+        rng: random.Random | None = None,
+        semantic_sampler: Any | None = None,
+    ):
         self.rng = rng or random.Random()
         self.primitive = PrimitiveSampler(self.rng)
         self.semantic_sampler = semantic_sampler
 
     def sample(
         self,
-        schema: dict,
+        schema: dict[str, Any],
         depth: int = 0,
         tool_name: str = "",
         tool_description: str = "",
@@ -72,7 +76,7 @@ class RecursiveSampler(ArgumentSampler):
 
     def _sample_object(
         self,
-        schema: dict,
+        schema: dict[str, Any],
         depth: int,
         tool_name: str,
         tool_description: str,
@@ -110,12 +114,12 @@ class RecursiveSampler(ArgumentSampler):
 
         return result
 
-    def _is_nullable(self, schema: dict) -> bool:
+    def _is_nullable(self, schema: dict[str, Any]) -> bool:
         return schema.get("nullable") is True or (
             isinstance(schema.get("type"), list) and "null" in schema["type"]
         )
 
-    def _sample_nullable(self, schema: dict, depth: int) -> Any:
+    def _sample_nullable(self, schema: dict[str, Any], depth: int) -> Any:
         """Randomly return `None` for nullable schemas, otherwise sample."""
         if self.rng.random() < 0.5:
             return None
@@ -125,7 +129,7 @@ class RecursiveSampler(ArgumentSampler):
             new_schema["type"] = [x for x in t if x != "null"]
         return self.sample(new_schema, depth + 1)
 
-    def _sample_array(self, schema: dict, depth: int) -> list:
+    def _sample_array(self, schema: dict[str, Any], depth: int) -> list[Any]:
         """Sample an array of items according to `items` schema."""
         item_schema = schema.get("items", {})
         min_items = schema.get("minItems", 1)
@@ -133,7 +137,7 @@ class RecursiveSampler(ArgumentSampler):
         length = self.rng.randint(min_items, max_items)
         return [self.sample(item_schema, depth + 1) for _ in range(length)]
 
-    def _fallback(self, schema: dict) -> Any:
+    def _fallback(self, schema: dict[str, Any]) -> Any:
         """Return a simple fallback value when sampling limits are reached."""
         t = schema.get("type")
         if t == "object":

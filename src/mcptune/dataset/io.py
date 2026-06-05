@@ -34,12 +34,11 @@ def read_jsonl(path: str | Path, strict: bool = True) -> list[DatasetRow]:
     """Read a JSONL dataset file and return validated `DatasetRow` objects.
 
     Parameters
-    ----------
-    path:
-        Path to the JSONL file.
-    strict:
-        If True, validation errors will raise and abort reading. If False,
-        invalid rows are skipped.
+        path:
+            Path to the JSONL file.
+        strict:
+            If True, validation errors will raise and abort reading. If False,
+            invalid rows are skipped.
     """
     path = Path(path)
     rows: list[DatasetRow] = []

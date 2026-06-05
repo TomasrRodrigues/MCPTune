@@ -7,7 +7,9 @@ and `save` to persist artifacts.
 """
 
 from abc import ABC, abstractmethod
+from typing import Any
 
+from ..schema.tools import ToolSpec
 from .types import TrainedModel
 
 
@@ -18,9 +20,9 @@ class TrainerBackend(ABC):
     def train(
         self,
         model_name: str,
-        dataset,
-        config: dict | None = None,
-        tools=None,
+        dataset: list[Any],
+        config: dict[str, Any] | None = None,
+        tools: list[ToolSpec] | None = None,
     ) -> TrainedModel:
         """Train on `dataset` and return a `TrainedModel` descriptor.
 

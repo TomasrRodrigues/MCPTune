@@ -6,45 +6,51 @@ tool_result back in a user turn - there is no separate tool role.
 """
 
 import json
+from typing import Any
 
+from mcptune.formats.base import Format
 from mcptune.schema.dataset import DatasetRow
 
+from ..schema.tools import ToolSpec
 from ._common import template_intent
 
 
-def anthropic_tool_use(rows: list[DatasetRow]) -> list[dict]:
-    output = []
-    for row in rows:
-        user_message = row.user_intent or template_intent(row)
-        call_id = row.request["id"]
-        tool_result_content = json.dumps(row.response) if row.response is not None else ""
+class AnthropicFormat(Format):
+    def format_tool(
+        self, rows: list[DatasetRow], tools: list[ToolSpec] | None = None
+    ) -> list[dict[str, Any]]:
+        output: list[dict[str, Any]] = []
+        for row in rows:
+            user_message = row.user_intent or template_intent(row)
+            call_id = row.request["id"]
+            tool_result_content = json.dumps(row.response) if row.response is not None else ""
 
-        output.append(
-            {
-                "messages": [
-                    {"role": "user", "content": user_message},
-                    {
-                        "role": "assistant",
-                        "content": [
-                            {
-                                "type": "tool_use",
-                                "id": call_id,
-                                "name": row.tool_name,
-                                "input": row.arguments,
-                            }
-                        ],
-                    },
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "tool_result",
-                                "tool_use_id": call_id,
-                                "content": tool_result_content,
-                            }
-                        ],
-                    },
-                ]
-            }
-        )
-    return output
+            output.append(
+                {
+                    "messages": [
+                        {"role": "user", "content": user_message},
+                        {
+                            "role": "assistant",
+                            "content": [
+                                {
+                                    "type": "tool_use",
+                                    "id": call_id,
+                                    "name": row.tool_name,
+                                    "input": row.arguments,
+                                }
+                            ],
+                        },
+                        {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "tool_result",
+                                    "tool_use_id": call_id,
+                                    "content": tool_result_content,
+                                }
+                            ],
+                        },
+                    ]
+                }
+            )
+        return output

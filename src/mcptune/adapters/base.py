@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Any
 
 from mcptune.schema.tools import ToolSpec
 
@@ -38,7 +39,7 @@ class MCPAdapter(ABC):
         pass
 
     @abstractmethod
-    async def call_tool(self, tool_name: str, arguments: dict) -> dict:
+    async def call_tool(self, tool_name: str, arguments: dict[Any, Any]) -> dict[str, Any]:
         """
         Execute a tool call against the MCP server.
 

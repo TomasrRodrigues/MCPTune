@@ -1,6 +1,6 @@
 import pytest
 
-from mcptune.formats.tool_use import tool_use
+from mcptune.formats.tool_use import ToolUseFormat
 from mcptune.schema.dataset import DatasetRow
 from mcptune.schema.tools import ToolParameter, ToolSpec
 
@@ -40,13 +40,13 @@ def _row():
 
 
 def test_includes_full_tool_surface_not_just_called_tool():
-    out = tool_use([_row()], _tools())
+    out = ToolUseFormat().format_tool([_row()], _tools())
     names = {t["function"]["name"] for t in out[0]["tools"]}
     assert names == {"get_weather", "send_email"}
 
 
 def test_assistant_call_is_structured_not_stringified():
-    assistant = tool_use([_row()], _tools())[0]["messages"][1]
+    assistant = ToolUseFormat().format_tool([_row()], _tools())[0]["messages"][1]
     assert assistant.get("content") in (None, "")  # not stringified into content
     call = assistant["tool_calls"][0]
     assert call["type"] == "function"
@@ -55,10 +55,10 @@ def test_assistant_call_is_structured_not_stringified():
 
 
 def test_user_turn_uses_intent():
-    out = tool_use([_row()], _tools())
+    out = ToolUseFormat().format_tool([_row()], _tools())
     assert out[0]["messages"][0] == {"role": "user", "content": "What's the weather in Lisbon?"}
 
 
 def test_requires_tools():
     with pytest.raises(ValueError):
-        tool_use([_row()], [])
+        ToolUseFormat().format_tool([_row()], [])

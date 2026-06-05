@@ -44,6 +44,7 @@ class IntentSynthesizer:
         temperature: float = 0.7,
         llm_call: Callable[[str], str] | None = None,
         ollama_host: str | None = None,
+        strict: bool = False,
     ):
         self.backend = backend
         self.prompt_version = prompt_version
@@ -52,26 +53,44 @@ class IntentSynthesizer:
         self.ollama_host = ollama_host
         self._llm_call = llm_call
         self._client: LLMClient | None = None
+        self.strict = strict
+        self._fallback_count = 0
+        self._warned = False
 
     def synthesize(self, tool: ToolSpec, arguments: dict[str, Any]) -> IntentResult:
-        """Return an IntentResult. The `prompt_version` is None when the
-        template fallback was used (backend='none', LLM error, or empty
-        response). Otherwise it's the prompt version that produced the
-        intent."""
         if self.backend == "none":
             return IntentResult(self._template_fallback(tool, arguments), None)
-
         try:
             prompt = self._build_prompt(tool, arguments)
             response = self._call_llm(prompt)
         except Exception as e:
-            print(f"[MCPTune Warn] Intent synthesis failed, using template: {e}")
+            if self.strict:
+                raise RuntimeError(
+                    f"Intent backend {self.backend!r} failed: {e}. Fix the backend, "
+                    "or set strict_llm=False to fall back to templates."
+                ) from e
+            self._note_fallback(str(e))
             return IntentResult(self._template_fallback(tool, arguments), None)
 
         text = response.strip()
         if not text:
+            self._note_fallback("empty response")
             return IntentResult(self._template_fallback(tool, arguments), None)
         return IntentResult(text, self.prompt_version)
+
+    def _note_fallback(self, reason: str) -> None:
+        self._fallback_count += 1
+        if not self._warned:
+            self._warned = True
+            print(
+                f"[MCPTune Warn] Intent synthesis fell back to template "
+                f"(backend={self.backend!r}): {reason}. Remaining fallbacks are "
+                "counted and summarized at the end of generation."
+            )
+
+    @property
+    def fallback_count(self) -> int:
+        return self._fallback_count
 
     # ---------------------------------------------------------------------
 
@@ -90,14 +109,14 @@ class IntentSynthesizer:
     def _build_prompt(self, tool: ToolSpec, arguments: dict[str, Any]) -> str:
         template = self._load_prompt_template()
 
-        param_lines = []
+        param_lines: list[str] = []
         for p in tool.parameters:
             desc = (p.description or "").strip()
             line = f"- {p.name}"
             if desc:
                 line += f": {self._truncate(desc, 400)}"
             param_lines.append(line)
-        parameters_section = "\n".join(param_lines) if param_lines else "(no parameters)"
+        parameters_section: str = "\n".join(param_lines) if param_lines else "(no parameters)"
 
         return (
             template.replace("{tool_name}", tool.name)

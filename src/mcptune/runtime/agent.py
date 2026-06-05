@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
+from typing import Any
 
 from ..adapters.base import MCPAdapter
 from ..schema.function_schema import toolspecs_to_function_schemas
@@ -21,12 +22,12 @@ from .runner import ModelRunner
 @dataclass
 class RunResult:
     final_text: str
-    messages: list[dict]
+    messages: list[dict[str, str]]
     tool_calls: list[ToolCall] = field(default_factory=list)
     stopped_reason: str = "final_answer"  # or "max_turns"
 
 
-def _extract_text(response: dict) -> str:
+def _extract_text(response: dict[str, str | list[dict[str, str]]]) -> str:
     blocks = response.get("content") or []
     texts = [b.get("text", "") for b in blocks if isinstance(b, dict) and b.get("type") == "text"]
     joined = "\n".join(t for t in texts if t)
@@ -55,13 +56,13 @@ async def run(
     max_turns: int = 6,
     call_format: str = "qwen",
 ) -> RunResult:
-    function_schemas = toolspecs_to_function_schemas(tools)
-    messages: list[dict] = [{"role": "user", "content": user_message}]
+    function_schemas: list[dict[str, Any]] = toolspecs_to_function_schemas(tools)
+    messages: list[dict[str, Any]] = [{"role": "user", "content": user_message}]
     calls_made: list[ToolCall] = []
-    text = ""
+    text: str = ""
 
     for _ in range(max_turns):
-        text = runner.generate(messages, function_schemas)
+        text: str = runner.generate(messages, function_schemas)
         messages.append({"role": "assistant", "content": text})
         calls = parse_tool_calls(text, fmt=call_format)
         if not calls:

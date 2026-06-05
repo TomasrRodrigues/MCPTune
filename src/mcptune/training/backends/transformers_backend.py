@@ -19,7 +19,7 @@ from ..base import TrainerBackend
 from ..types import TrainedModel
 
 DEFAULT_CONFIG = {
-    "format": "tool_use",  # was "trl" — native tool-use is the training default
+    "format": "tool_use",
     "lora_rank": 8,
     "lora_alpha": 16,
     "lora_dropout": 0.05,
@@ -34,19 +34,14 @@ DEFAULT_CONFIG = {
 
 
 def _tokenize_example(tokenizer, ex: dict, max_length: int) -> dict:
-    """Render one conversation to training tokens with SFT label masking.
+    """Render one conversation to training tokens, supervising every
+    assistant turn.
 
-    Loss is computed only on the assistant completion: prompt tokens
-    (tools context + user turn) and padding are set to -100. With tool
-    schemas now in context the prompt dominates the sequence, so without
-    this the model mostly learns to reproduce tool definitions it never
-    needs to generate.
-
-    Assumes the final message is the assistant turn to supervise (true
-    for the tool_use format: [user, assistant]). For other shapes it
-    supervises everything except padding. Issue 3 adds a tool turn + a
-    final answer turn and will generalize this to supervise ALL assistant
-    turns.
+    Loss is computed only on assistant tokens (the tool call AND, when
+    present, the final answer). User turns, tool results, the tools
+    context, and padding are masked to -100. Generalizes the earlier
+    last-turn-only masking to multi-turn (call -> result -> answer)
+    conversations.
     """
     messages = ex["messages"]
     tools_ctx = ex.get("tools")
@@ -58,20 +53,23 @@ def _tokenize_example(tokenizer, ex: dict, max_length: int) -> dict:
     input_ids = tokens["input_ids"]
     attention_mask = tokens["attention_mask"]
 
-    if messages and messages[-1].get("role") == "assistant":
-        prompt_text = tokenizer.apply_chat_template(
-            messages[:-1], tools=tools_ctx, tokenize=False, add_generation_prompt=True
+    labels = [-100] * len(input_ids)
+    for i, msg in enumerate(messages):
+        if msg.get("role") != "assistant":
+            continue
+        # Tokens this assistant turn occupies: [start, end).
+        prefix = tokenizer.apply_chat_template(
+            messages[:i], tools=tools_ctx, tokenize=False, add_generation_prompt=True
         )
-        prompt_len = len(
-            tokenizer(prompt_text, truncation=True, max_length=max_length)["input_ids"]
+        through = tokenizer.apply_chat_template(
+            messages[: i + 1], tools=tools_ctx, tokenize=False, add_generation_prompt=False
         )
-    else:
-        prompt_len = 0  # legacy/raw formats: supervise all non-pad tokens
+        start = len(tokenizer(prefix, truncation=True, max_length=max_length)["input_ids"])
+        end = len(tokenizer(through, truncation=True, max_length=max_length)["input_ids"])
+        for j in range(start, min(end, len(input_ids))):
+            if attention_mask[j]:
+                labels[j] = input_ids[j]
 
-    labels = [
-        -100 if (i < prompt_len or attention_mask[i] == 0) else tok
-        for i, tok in enumerate(input_ids)
-    ]
     return {"input_ids": input_ids, "attention_mask": attention_mask, "labels": labels}
 
 

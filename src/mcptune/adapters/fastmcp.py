@@ -1,4 +1,6 @@
-from fastmcp import Client
+from typing import Any
+
+from fastmcp import Client, FastMCP
 
 from mcptune.adapters.base import MCPAdapter
 from mcptune.schema.tools import ToolParameter, ToolSpec
@@ -19,7 +21,7 @@ class FastMCPAdapter(MCPAdapter):
     This class is purely responsible for transport + normalization.
     """
 
-    def __init__(self, server):
+    def __init__(self, server: str | FastMCP):
         """
         Parameters
         ----------
@@ -34,38 +36,33 @@ class FastMCPAdapter(MCPAdapter):
         Fetch tool definitions from the MCP server and convert them
         into internal ToolSpec objects.
 
-        Returns
-        -------
-        list[ToolSpec]
-            Normalized tool specifications used by MCPTune.
+        Returns:
+            list[ToolSpec]
+                Normalized tool specifications used by MCPTune.
         """
         async with Client(self.server) as client:
             tools = await client.list_tools()
 
         return [self._to_toolspec(tool) for tool in tools]
 
-    async def call_tool(self, tool_name: str, arguments: dict) -> dict:
+    async def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         """
         Execute a tool call on the MCP server.
 
         Parameters
-        ----------
-        tool_name:
-            Name of the tool to invoke.
-
-        arguments:
-            Dictionary of arguments matching the tool schema.
+            tool_name:
+                Name of the tool to invoke.
+            arguments:
+                Dictionary of arguments matching the tool schema.
 
         Returns
-        -------
-        dict
-            Normalized response with:
-            - content blocks
-            - structured content (if available)
-            - error flag
+            dict
+                Normalized response with:
+                - content blocks
+                - structured content (if available)
+                - error flag
 
         Notes
-        -----
         This is a thin wrapper over FastMCP's call_tool API.
         No semantic interpretation is performed here.
         """
@@ -74,7 +71,7 @@ class FastMCPAdapter(MCPAdapter):
 
         return self._normalize_response(result)
 
-    def _to_toolspec(self, tool) -> ToolSpec:
+    def _to_toolspec(self, tool: Any) -> ToolSpec:
         """
         Convert a FastMCP tool object into MCPTune's ToolSpec format.
 
@@ -82,7 +79,7 @@ class FastMCPAdapter(MCPAdapter):
         components (samplers, intent models, trainers) operate on a
         consistent structure.
         """
-        schema = tool.inputSchema or {}
+        schema: Any = tool.inputSchema or {}
         props = schema.get("properties", {})
         required = schema.get("required", [])
 
@@ -103,7 +100,7 @@ class FastMCPAdapter(MCPAdapter):
             raw_input_schema=schema,
         )
 
-    def _normalize_response(self, result) -> dict:
+    def _normalize_response(self, result: Any) -> dict[str, Any]:
         """
         Normalize FastMCP CallToolResult into a transport-agnostic dict.
 

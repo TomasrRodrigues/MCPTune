@@ -7,6 +7,7 @@ dataset construction.
 
 import random
 import string
+from typing import Any
 
 from .base import ArgumentSampler
 
@@ -18,10 +19,10 @@ class PrimitiveSampler(ArgumentSampler):
     and numeric `minimum`/`maximum` hints when present.
     """
 
-    def __init__(self, rng=None):
+    def __init__(self, rng: random.Random | None = None):
         self.rng = rng or random.Random()
 
-    def sample(self, schema: dict):
+    def sample(self, schema: dict[str, Any]) -> Any:
         """Return a primitive value matching `schema` where possible."""
 
         t = schema.get("type")
@@ -40,7 +41,7 @@ class PrimitiveSampler(ArgumentSampler):
 
         return None
 
-    def _string(self, schema: dict):
+    def _string(self, schema: dict[str, Any]) -> str:
         """Generate a string using `format`, `pattern`, or length hints."""
         fmt = schema.get("format")
         pattern = schema.get("pattern")
@@ -62,7 +63,7 @@ class PrimitiveSampler(ArgumentSampler):
 
         return "".join(self.rng.choices(string.ascii_lowercase, k=length))
 
-    def _integer(self, schema: dict):
+    def _integer(self, schema: dict[str, Any]) -> int:
         """Generate an integer respecting `minimum` and `maximum`."""
         min_v = schema.get("minimum", 0)
         max_v = schema.get("maximum", min_v + 100)
@@ -72,7 +73,7 @@ class PrimitiveSampler(ArgumentSampler):
 
         return self.rng.randint(min_v, max_v)
 
-    def _number(self, schema: dict):
+    def _number(self, schema: dict[str, Any]) -> float:
         """Generate a float respecting `minimum` and `maximum`."""
         min_v = schema.get("minimum", 0.0)
         max_v = schema.get("maximum", min_v + 100.0)
@@ -82,7 +83,7 @@ class PrimitiveSampler(ArgumentSampler):
 
         return self.rng.uniform(min_v, max_v)
 
-    def _email(self):
+    def _email(self) -> str:
         """Produce a simple synthetic email address."""
         user = "".join(self.rng.choices(string.ascii_lowercase, k=6))
         domain = "".join(self.rng.choices(string.ascii_lowercase, k=5))

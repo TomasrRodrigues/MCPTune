@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Any
 
 """Backend execution interface.
 
@@ -29,7 +30,7 @@ class Backend(ABC):
     """
 
     @abstractmethod
-    def call_tool(self, tool_name: str, arguments: dict) -> dict:
+    def call_tool(self, tool_name: str, arguments: dict[Any, Any]) -> dict[Any, Any]:
         """Execute a tool call.
 
         Parameters
