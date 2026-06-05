@@ -37,3 +37,5 @@ Thumbs.db
 
 .hypothesis/
 
+main.py
+run_pipeline.py
