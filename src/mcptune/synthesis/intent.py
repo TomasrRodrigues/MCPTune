@@ -92,8 +92,6 @@ class IntentSynthesizer:
     def fallback_count(self) -> int:
         return self._fallback_count
 
-
-
     def _call_llm(self, prompt: str) -> str:
         if self._llm_call is not None:
             return self._llm_call(prompt)
@@ -128,10 +126,8 @@ class IntentSynthesizer:
         )
 
     def _load_prompt_template(self) -> str:
-        return (
-            files("mcptune.synthesis")
-            .joinpath("prompts", f"{self.prompt_version}.txt")
-            .read_text(encoding="utf-8")
+        return (files("mcptune.synthesis") / "prompts" / f"{self.prompt_version}.txt").read_text(
+            encoding="utf-8"
         )
 
     @staticmethod

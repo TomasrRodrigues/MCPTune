@@ -99,10 +99,8 @@ class AnswerSynthesizer:
 
     def _build_prompt(self, tool: ToolSpec, arguments: dict[str, Any], result_text: str) -> str:
         template = (
-            files("mcptune.synthesis")
-            .joinpath("prompts", f"{self.prompt_version}.txt")
-            .read_text(encoding="utf-8")
-        )
+            files("mcptune.synthesis") / "prompts" / f"{self.prompt_version}.txt"
+        ).read_text(encoding="utf-8")
         return (
             template.replace("{tool_name}", tool.name)
             .replace("{tool_description}", (tool.description or "(no description)")[:800])

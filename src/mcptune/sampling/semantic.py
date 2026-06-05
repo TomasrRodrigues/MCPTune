@@ -83,10 +83,6 @@ class SemanticSampler:
 
         return generated
 
-
-
-
-
     def _execute_local_lookup(self, properties: dict[str, Any]) -> dict[str, Any]:
         results: dict[str, Any] = {}
         for name, schema in properties.items():
@@ -94,10 +90,6 @@ class SemanticSampler:
             if value is not None:
                 results[name] = value
         return results
-
-
-
-
 
     def _execute_llm_batch(
         self,
@@ -122,10 +114,6 @@ class SemanticSampler:
             )
         return self._client.generate(prompt, json_mode=True)
 
-
-
-
-
     def _build_prompt(
         self,
         tool_name: str,
@@ -145,10 +133,8 @@ class SemanticSampler:
         )
 
     def _load_prompt_template(self) -> str:
-        return (
-            files("mcptune.sampling")
-            .joinpath("prompts", f"{self.prompt_version}.txt")
-            .read_text(encoding="utf-8")
+        return (files("mcptune.sampling") / "prompts" / f"{self.prompt_version}.txt").read_text(
+            encoding="utf-8"
         )
 
     @staticmethod

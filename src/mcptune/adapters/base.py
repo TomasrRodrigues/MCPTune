@@ -36,8 +36,6 @@ class MCPAdapter(ABC):
         """
         pass
 
-
-
     @abstractmethod
     async def call_tool(self, tool_name: str, arguments: dict[Any, Any]) -> dict[str, Any]:
         """
