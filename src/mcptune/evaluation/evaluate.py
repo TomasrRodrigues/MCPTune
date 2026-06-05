@@ -1,4 +1,4 @@
-"""Minimal before/after evaluation — proof the fine-tune teaches tool calls.
+"""Minimal before/after evaluation - proof the fine-tune teaches tool calls.
 
 Runs held-out intents through the runtime (mcptune.runtime) and scores
 the emitted call against an expected one. This is the MINIMAL version:
@@ -49,7 +49,7 @@ def evaluate(
 
     Generates a single turn per case with the tools in context, parses
     the emitted call, and checks tool name + argument keys. No execution
-    — we're measuring whether the model EMITS the right call.
+    - we're measuring whether the model EMITS the right call.
     """
     function_schemas = toolspecs_to_function_schemas(tools)
     tool_ok = 0

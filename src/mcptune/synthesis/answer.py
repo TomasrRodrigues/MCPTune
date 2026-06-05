@@ -3,7 +3,7 @@
 Mirrors IntentSynthesizer: same backends, same template-fallback +
 provenance contract (prompt_version is None when the fallback ran).
 Given the user's intent, the call, and the tool's result, produce the
-reply the assistant would give — the turn that teaches the model to USE
+reply the assistant would give - the turn that teaches the model to USE
 a result, not just request one.
 """
 

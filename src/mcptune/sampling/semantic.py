@@ -83,9 +83,9 @@ class SemanticSampler:
 
         return generated
 
-    # ---------------------------------------------------------------------
-    # Local lookup
-    # ---------------------------------------------------------------------
+
+
+
 
     def _execute_local_lookup(self, properties: dict[str, Any]) -> dict[str, Any]:
         results: dict[str, Any] = {}
@@ -95,9 +95,9 @@ class SemanticSampler:
                 results[name] = value
         return results
 
-    # ---------------------------------------------------------------------
-    # LLM-backed generation (via shared LLMClient)
-    # ---------------------------------------------------------------------
+
+
+
 
     def _execute_llm_batch(
         self,
@@ -122,9 +122,9 @@ class SemanticSampler:
             )
         return self._client.generate(prompt, json_mode=True)
 
-    # ---------------------------------------------------------------------
-    # Prompt building (unchanged from Issue 13)
-    # ---------------------------------------------------------------------
+
+
+
 
     def _build_prompt(
         self,

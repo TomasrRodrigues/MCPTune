@@ -155,7 +155,7 @@ class MCPTune:
         return self.trainer.train(self.model, dataset, config, tools=tools or self._tools)
 
     def evaluate(self, model: Any) -> dict[str, float]:
-        # TODO: Phase 5 — evaluation pipeline.
+        # TODO: Phase 5 - evaluation pipeline.
         print("[4] Evaluating model...")
         return {"accuracy": 0.9}
 
@@ -219,7 +219,7 @@ class MCPTune:
         if n:
             print(
                 f"[MCPTune Warn] {n}/{len(dataset)} rows used the ANSWER template "
-                f"fallback — backend {self.answer_synthesizer.backend!r} was "
+                f"fallback - backend {self.answer_synthesizer.backend!r} was "
                 "unavailable or returned empty."
             )
 

@@ -4,7 +4,7 @@ Unlike the other emitters, this produces data a runtime can consume:
 
   A) the available tool definitions are included in context (`tools`),
      so the model learns to condition on what's available and pick the
-     right tool — not just transcribe a named one;
+     right tool - not just transcribe a named one;
   B) the assistant turn carries a STRUCTURED tool call, not stringified
      JSON in content. The native <tool_call> text is produced by the
      tokenizer's chat template at training time (apply_chat_template
@@ -40,7 +40,7 @@ class ToolUseFormat(Format):
     ) -> list[dict[str, Any]]:
         """Emit native tool-use training rows.
 
-        `tools` is the FULL available tool surface — rendered into every
+        `tools` is the FULL available tool surface - rendered into every
         example so the model learns selection, not just the tools that
         happen to appear in `rows`.
 

@@ -1,6 +1,6 @@
 """No-op trainer backend for fast unit tests and dry runs.
 
-Mirrors the TrainerBackend interface but performs no actual training —
+Mirrors the TrainerBackend interface but performs no actual training -
 records metadata about what would be trained and returns a TrainedModel
 descriptor. Useful for:
 

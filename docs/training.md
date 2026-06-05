@@ -26,7 +26,7 @@ Anything that implements this contract plugs into `MCPTune`.
 
 ## Built-in backends
 
-### `TransformersTrainerBackend` — real LoRA fine-tuning
+### `TransformersTrainerBackend` - real LoRA fine-tuning
 
 HuggingFace transformers + PEFT LoRA. Requires `mcptune[transformers]`:
 
@@ -91,14 +91,14 @@ All keys are optional; defaults are tuned for small models.
 The tokenizer must have a `chat_template`. Qwen2.x, Llama 3, Mistral
 Instruct, and SmolLM-Instruct all qualify. Models without one (raw
 GPT-2, base Llama 3 without `-Instruct`, etc.) raise `ValueError` at
-training time — set `tokenizer.chat_template` manually before
+training time - set `tokenizer.chat_template` manually before
 `train()` if you really need to use one.
 
 #### What gets saved
 
 `save()` writes the PEFT adapter (`adapter_config.json` +
 `adapter_model.safetensors`) and the tokenizer. The base model is NOT
-saved — load it from HuggingFace Hub and apply the adapter at
+saved - load it from HuggingFace Hub and apply the adapter at
 inference time:
 
 ```python
@@ -110,7 +110,7 @@ tokenizer = AutoTokenizer.from_pretrained("./my-finetuned-model")
 model = PeftModel.from_pretrained(base, "./my-finetuned-model")
 ```
 
-### `MockTrainerBackend` — no-op for tests
+### `MockTrainerBackend` - no-op for tests
 
 Records `model_name`, `num_examples`, and `config` in metadata; never
 actually trains. Useful for testing orchestration without heavy deps.

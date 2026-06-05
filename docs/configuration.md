@@ -29,7 +29,7 @@ Controls how argument values are generated for known parameter shapes.
 | `"ollama"`      | Generate via local Ollama HTTP API                                        | `ollama serve` running |
 | `"transformers"`| Generate via HuggingFace transformers in-process                          | `mcptune[transformers]` |
 
-Composes with structural recursive sampling — semantic fills what it knows, recursive fills the rest. See [grounding.md](grounding.md) for prompt details.
+Composes with structural recursive sampling - semantic fills what it knows, recursive fills the rest. See [grounding.md](grounding.md) for prompt details.
 
 ### Sampling reproducibility
 
@@ -47,7 +47,7 @@ Controls how the natural-language `user_intent` for each row is generated.
 | `"ollama"`       | Generate via Ollama; falls back to template on error/empty                | `ollama serve` running |
 | `"transformers"` | Generate via HuggingFace in-process                                       | `mcptune[transformers]` |
 
-Each `DatasetRow` records `intent_prompt_version` — `None` when the template was used (either configured that way or fallen back to), the prompt version (`"intent_v1"`) when the LLM actually produced the intent. This keeps provenance honest.
+Each `DatasetRow` records `intent_prompt_version` - `None` when the template was used (either configured that way or fallen back to), the prompt version (`"intent_v1"`) when the LLM actually produced the intent. This keeps provenance honest.
 
 ## Training
 

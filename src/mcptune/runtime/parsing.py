@@ -1,4 +1,4 @@
-"""Tool-call parsing — the parse side of the format contract.
+"""Tool-call parsing - the parse side of the format contract.
 
 Whatever the emitters (Issue 2) render as a call, this must read back.
 The round-trip test (emit -> parse -> original) is what guarantees the

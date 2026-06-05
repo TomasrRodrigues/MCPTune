@@ -6,7 +6,7 @@ from mcptune.runtime import run
 
 
 class ScriptedRunner:
-    """Returns canned outputs in order — stands in for a model."""
+    """Returns canned outputs in order - stands in for a model."""
 
     def __init__(self, outputs):
         self.outputs, self.i = list(outputs), 0

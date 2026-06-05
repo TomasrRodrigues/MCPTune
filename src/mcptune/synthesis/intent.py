@@ -92,7 +92,7 @@ class IntentSynthesizer:
     def fallback_count(self) -> int:
         return self._fallback_count
 
-    # ---------------------------------------------------------------------
+
 
     def _call_llm(self, prompt: str) -> str:
         if self._llm_call is not None:

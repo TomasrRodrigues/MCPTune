@@ -2,7 +2,7 @@
 
 Lists tools in context, generates, parses the call, executes via the
 adapter, feeds the result back, repeats until the model stops calling or
-max_turns is hit. Not a production runtime (that's 1.0.0) — feed-back-on-
+max_turns is hit. Not a production runtime (that's 1.0.0) - feed-back-on-
 error is the only recovery, no streaming, no concurrency.
 """
 

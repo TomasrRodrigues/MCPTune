@@ -15,7 +15,7 @@ from mcptune.runtime import TransformersModelRunner
 BASE_MODEL = "Qwen/Qwen2.5-1.5B-Instruct"
 ADAPTER_PATH = "./mcptune-demo-output/finetuned"
 
-# Held out — NOT in the training set.
+# Held out - NOT in the training set.
 CASES = [
     EvalCase("What's the weather in Madrid?", "get_weather", {"city"}),
     EvalCase("Is it raining in Berlin right now?", "get_weather", {"city"}),

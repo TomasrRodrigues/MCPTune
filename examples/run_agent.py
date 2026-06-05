@@ -1,7 +1,7 @@
 """Run a model against an in-process MCP server through the runtime.
 
 Use a real instruct model (Qwen2.5-1.5B-Instruct or larger) to see calls
-actually happen — 135M won't reliably emit them. Requires
+actually happen - 135M won't reliably emit them. Requires
 mcptune[transformers].
 """
 

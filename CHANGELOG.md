@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0] — first end-to-end release
+## [0.1.0] - first end-to-end release
 
 The full pipeline runs: discover MCP tools, generate synthetic datasets, emit them in standard training formats, and fine-tune a base model with LoRA.
 
@@ -21,8 +21,8 @@ The full pipeline runs: discover MCP tools, generate synthetic datasets, emit th
 - Closed-loop execution: `FastMCPAdapter.call_tool` normalizes responses into `{content, structured_content, is_error}`.
 - Training-format emitters: `openai_messages`, `sharegpt`, `trl_sft`, `anthropic_tool_use`, plus a `convert(rows, format)` registry.
 - `TrainerBackend` ABC with two reference implementations:
-  - `TransformersTrainerBackend` — real LoRA fine-tuning via transformers + PEFT.
-  - `MockTrainerBackend` — no-op backend for fast unit tests.
+  - `TransformersTrainerBackend` - real LoRA fine-tuning via transformers + PEFT.
+  - `MockTrainerBackend` - no-op backend for fast unit tests.
 - 183-test suite covering unit, integration, and e2e layers. Property-based tests for samplers via Hypothesis.
 
 ### Known limitations

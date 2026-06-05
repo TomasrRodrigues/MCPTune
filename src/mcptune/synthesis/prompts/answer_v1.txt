@@ -9,5 +9,5 @@ The tool returned:
 {result_text}
 
 Write the assistant's reply to the user: a natural, concise answer that uses the
-result above. Do not mention tools, JSON, or function calls — just answer as if
+result above. Do not mention tools, JSON, or function calls - just answer as if
 speaking to the user. Output only the reply text, nothing else.

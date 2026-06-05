@@ -13,7 +13,7 @@ MCPTune connects to an [MCP](https://modelcontextprotocol.io) server, discovers 
 ## Install
 
 ```bash
-# Base install — dataset generation, all four training-format emitters
+# Base install - dataset generation, all four training-format emitters
 pip install mcptune
 
 # Add real LoRA fine-tuning (heavy: pulls torch, transformers, peft)
@@ -54,16 +54,16 @@ async def main():
     dataset = tuner.build_dataset(tools, samples_per_tool=3)
 
     for row in dataset:
-        print(f"{row.tool_name}({row.arguments}) — intent: {row.user_intent}")
+        print(f"{row.tool_name}({row.arguments}) - intent: {row.user_intent}")
 
 asyncio.run(main())
 ```
 
 Output:
 ```
-add({'a': 53, 'b': 12}) — intent: Use the add tool with arguments: {"a": 53, "b": 12}
-add({'a': 7, 'b': 91}) — intent: ...
-get_weather({'city': 'Lisbon'}) — intent: ...
+add({'a': 53, 'b': 12}) - intent: Use the add tool with arguments: {"a": 53, "b": 12}
+add({'a': 7, 'b': 91}) - intent: ...
+get_weather({'city': 'Lisbon'}) - intent: ...
 ...
 ```
 
@@ -115,12 +115,12 @@ for architectural detail and extension points.
 
 ## Documentation
 
-- [Quickstart](docs/quickstart.md) — full pipeline walkthrough
-- [Configuration reference](docs/configuration.md) — every constructor parameter and config dict
-- [Training](docs/training.md) — fine-tuning with LoRA, custom backends
-- [Training formats](docs/training_formats.md) — OpenAI, ShareGPT, TRL, Anthropic emitters
-- [Semantic grounding](docs/grounding.md) — how tool descriptions are used for argument synthesis
-- [Examples](examples/) — runnable scripts
+- [Quickstart](docs/quickstart.md) - full pipeline walkthrough
+- [Configuration reference](docs/configuration.md) - every constructor parameter and config dict
+- [Training](docs/training.md) - fine-tuning with LoRA, custom backends
+- [Training formats](docs/training_formats.md) - OpenAI, ShareGPT, TRL, Anthropic emitters
+- [Semantic grounding](docs/grounding.md) - how tool descriptions are used for argument synthesis
+- [Examples](examples/) - runnable scripts
 
 ## Contributing
 

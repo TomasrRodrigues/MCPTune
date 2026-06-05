@@ -1,7 +1,7 @@
 """Minimal end-to-end MCPTune example.
 
 Runs against an in-process FastMCP server. No external services
-required — uses the default local sampler and template-based intent
+required - uses the default local sampler and template-based intent
 synthesis.
 
 Usage:

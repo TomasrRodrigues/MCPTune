@@ -14,11 +14,11 @@ pip install "mcptune[transformers]"  # for the training step
 ```
 
 Optional but useful:
-- [Ollama](https://ollama.com) running locally if you want LLM-backed semantic sampling and intent synthesis. The pipeline works fine without it — it'll fall back to a lookup table and a templated intent.
+- [Ollama](https://ollama.com) running locally if you want LLM-backed semantic sampling and intent synthesis. The pipeline works fine without it - it'll fall back to a lookup table and a templated intent.
 
 ## 1. Define an MCP server
 
-For this guide we'll use a small in-process FastMCP server. In real use you'd point at any existing MCP server — local stdio binary, remote HTTP, or in-memory.
+For this guide we'll use a small in-process FastMCP server. In real use you'd point at any existing MCP server - local stdio binary, remote HTTP, or in-memory.
 
 ```python
 from fastmcp import FastMCP
@@ -74,15 +74,15 @@ asyncio.run(generate())
 
 Each `DatasetRow` carries:
 
-- `tool_name` — which tool the row exercises
-- `arguments` — the sampled arguments (schema-valid)
-- `request` — the full JSON-RPC envelope ready to send to the server
-- `user_intent` — a natural-language prompt that would elicit this call
-- `intent_prompt_version` — provenance for the intent (None if the
+- `tool_name` - which tool the row exercises
+- `arguments` - the sampled arguments (schema-valid)
+- `request` - the full JSON-RPC envelope ready to send to the server
+- `user_intent` - a natural-language prompt that would elicit this call
+- `intent_prompt_version` - provenance for the intent (None if the
   template fallback was used)
-- `response` / `error` — populated after execution (next step)
+- `response` / `error` - populated after execution (next step)
 
-The dataset is deterministic given a seed — re-running with the same `seed=42` produces the same dataset.
+The dataset is deterministic given a seed - re-running with the same `seed=42` produces the same dataset.
 
 ## 4. (Optional) Use real LLMs for grounded synthesis
 
@@ -122,7 +122,7 @@ loaded = read_jsonl("weather.jsonl")
 assert loaded == dataset
 ```
 
-The on-disk format is one JSON object per line. Each record includes a `schema_version: 1` field for future migrations. Validation is automatic on read — corrupt rows raise `DatasetValidationError`. See [`docs/training_formats.md`](training_formats.md) for the field-level schema.
+The on-disk format is one JSON object per line. Each record includes a `schema_version: 1` field for future migrations. Validation is automatic on read - corrupt rows raise `DatasetValidationError`. See [`docs/training_formats.md`](training_formats.md) for the field-level schema.
 
 ## 6. Convert to a training format
 
@@ -187,5 +187,5 @@ See [`docs/training.md`](training.md) for the full config dict, backend requirem
 
 - Run the full example end-to-end: [`examples/full_pipeline.py`](../examples/full_pipeline.py)
 - Configure each layer in detail: [`docs/configuration.md`](configuration.md)
-- Point at a real MCP server (FastMCP file, stdio binary, HTTP): the FastMCP `Client` already accepts all three — pass it as `mcpserver=...`.
+- Point at a real MCP server (FastMCP file, stdio binary, HTTP): the FastMCP `Client` already accepts all three - pass it as `mcpserver=...`.
 - Contribute: [`CONTRIBUTING.md`](../CONTRIBUTING.md) lists the   open issues and architectural constraints.

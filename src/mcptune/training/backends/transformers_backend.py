@@ -145,7 +145,7 @@ class TransformersTrainerBackend(TrainerBackend):
         if fully_masked:
             print(
                 f"[MCPTune Warn] {fully_masked}/{len(tokenized_rows)} examples had no "
-                f"supervised tokens — the completion was truncated at "
+                f"supervised tokens - the completion was truncated at "
                 f"max_length={max_length}. They contribute no training signal; "
                 "raise max_length."
             )
