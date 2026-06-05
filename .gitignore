@@ -37,3 +37,7 @@ Thumbs.db
 
 .hypothesis/
 
+mcptune-demo-output/
+
+main.py
+run_pipeline.py
