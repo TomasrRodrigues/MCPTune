@@ -22,50 +22,46 @@ class MCPAdapter(ABC):
         """
         Retrieve all tools exposed by the MCP server.
 
-        Returns
-        -------
-        list[ToolSpec]
-            A structured list of tool definitions including:
-            - tool name
-            - description
-            - parameter schemas
-            - optional metadata
+        Returns:
+            list[ToolSpec]
+                A structured list of tool definitions including:
+                - tool name
+                - description
+                - parameter schemas
+                - optional metadata
 
-        Notes
-        -----
-        This method is expected to be called once per session
-        during dataset construction or tool inspection.
+        Notes:
+            This method is expected to be called once per session
+            during dataset construction or tool inspection.
         """
         pass
+
+
 
     @abstractmethod
     async def call_tool(self, tool_name: str, arguments: dict[Any, Any]) -> dict[str, Any]:
         """
         Execute a tool call against the MCP server.
 
-        Parameters
-        ----------
-        tool_name:
-            Name of the tool to invoke.
+        Parameters:
+            tool_name:
+                Name of the tool to invoke.
+            arguments:
+                Dictionary of validated arguments matching the tool schema.
 
-        arguments:
-            Dictionary of validated arguments matching the tool schema.
+        Returns:
+            dict
+                Raw response from the MCP server. The structure is
+                backend-specific but typically includes:
+                - result data
+                - metadata
+                - error information (if applicable)
 
-        Returns
-        -------
-        dict
-            Raw response from the MCP server. The structure is
-            backend-specific but typically includes:
-            - result data
-            - metadata
-            - error information (if applicable)
-
-        Notes
-        -----
-        MCPTune does NOT assume:
-        - response format
-        - latency characteristics
-        - execution semantics
+        Notes:
+            MCPTune does NOT assume:
+            - response format
+            - latency characteristics
+            - execution semantics
 
         All interpretation of results happens in higher-level layers.
         """

@@ -24,12 +24,13 @@ class FastMCPAdapter(MCPAdapter):
     def __init__(self, server: str | FastMCP):
         """
         Parameters
-        ----------
-        server:
-            FastMCP server instance or connection target.
-            Passed directly into FastMCP Client.
+            server:
+                FastMCP server instance or connection target.
+                Passed directly into FastMCP Client.
         """
         self.server = server
+
+
 
     async def discover_tools(self) -> list[ToolSpec]:
         """
@@ -44,6 +45,8 @@ class FastMCPAdapter(MCPAdapter):
             tools = await client.list_tools()
 
         return [self._to_toolspec(tool) for tool in tools]
+
+
 
     async def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         """
@@ -70,6 +73,8 @@ class FastMCPAdapter(MCPAdapter):
             result = await client.call_tool(tool_name, arguments)
 
         return self._normalize_response(result)
+
+
 
     def _to_toolspec(self, tool: Any) -> ToolSpec:
         """
@@ -100,6 +105,8 @@ class FastMCPAdapter(MCPAdapter):
             raw_input_schema=schema,
         )
 
+
+
     def _normalize_response(self, result: Any) -> dict[str, Any]:
         """
         Normalize FastMCP CallToolResult into a transport-agnostic dict.
@@ -107,9 +114,9 @@ class FastMCPAdapter(MCPAdapter):
         This ensures MCPTune never depends on FastMCP-specific structures.
 
         Output format is intentionally minimal:
-        - content: raw response blocks
-        - structured_content: optional parsed payload
-        - is_error: execution status flag
+            - content: raw response blocks
+            - structured_content: optional parsed payload
+            - is_error: execution status flag
         """
         return {
             "content": [block.model_dump() for block in result.content],
