@@ -2,7 +2,7 @@
 
 Fine-tune a small language model to call a specific MCP server's tools.
 
-[![CI](https://github.com/YOUR_ORG/mcptune/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_ORG/mcptune/actions/workflows/ci.yml)
+[![CI](https://github.com/TomasrRodrigues/mcptune/actions/workflows/ci.yml/badge.svg)](https://github.com/TomasrRodrigues/mcptune/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 
@@ -19,22 +19,18 @@ get the base-vs-tuned number for your server and model.
 
 ## Install
 
-Not yet on PyPI - install from source:
-
 ```bash
-git clone https://github.com/YOUR_ORG/mcptune
-cd mcptune
-pip install -e .                      # core: discovery, dataset generation, formats
-pip install -e ".[transformers]"      # add LoRA fine-tuning + the runtime model runner
-pip install -e ".[dev]"               # contributor tooling
+pip install mcptune                   # core: discovery, dataset generation, formats
+pip install "mcptune[transformers]"   # add LoRA fine-tuning + the runtime model runner
 ```
 
-<!-- Once published: pip install mcptune  /  pip install "mcptune[transformers]" -->
+From source (for development):
 
-For realistic intents and arguments, run a local [Ollama](https://ollama.com)
-(`ollama serve`, then `ollama pull qwen2.5:3b`). Without it, MCPTune falls back
-to templated intents and a lookup table - fine for a smoke test, not for
-training data you'd trust.
+```bash
+git clone https://github.com/TomasrRodrigues/mcptune
+cd mcptune
+pip install -e ".[dev]"
+```
 
 ## How it works
 
@@ -118,10 +114,10 @@ your server through the minimal runtime with `examples/run_agent.py`.
 
 ## Documentation
 
-- [Quickstart](docs/quickstart.md)
-- [Configuration reference](docs/configuration.md)
-- [Training](docs/training.md) · [Training formats](docs/training_formats.md) · [Grounding](docs/grounding.md)
-- [Examples](examples/)
+- [Quickstart](https://github.com/TomasrRodrigues/mcptune/blob/main/docs/quickstart.md)
+- [Configuration reference](https://github.com/TomasrRodrigues/mcptune/blob/main/docs/configuration.md)
+- [Training](https://github.com/TomasrRodrigues/mcptune/blob/main/docs/training.md) · [Training formats](https://github.com/TomasrRodrigues/mcptune/blob/main/docs/training_formats.md) · [Grounding](https://github.com/TomasrRodrigues/mcptune/blob/main/docs/grounding.md)
+- [Examples](https://github.com/TomasrRodrigues/mcptune/tree/main/examples)
 
 ## Supported models
 
@@ -132,9 +128,10 @@ not train closed APIs.
 
 ## Contributing
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the workflow and architectural
-constraints. Issues are tracked by milestone (0.1.x, 0.2.0, 1.0.0).
+See [CONTRIBUTING.md](https://github.com/TomasrRodrigues/mcptune/blob/main/CONTRIBUTING.md)
+for the workflow and architectural constraints. Issues are tracked by milestone
+(0.1.x, 0.2.0, 1.0.0).
 
 ## License
 
-MIT - see [`LICENSE`](LICENSE).
+MIT - see [LICENSE](https://github.com/TomasrRodrigues/mcptune/blob/main/LICENSE).

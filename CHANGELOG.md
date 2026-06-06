@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] — documentation fixes
+
+### Fixed
+- README: replaced the `YOUR_ORG` placeholder with the real GitHub org in the
+  CI badge and the clone URL.
+- README: install instructions now lead with `pip install mcptune` (0.1.0
+  shipped with a "not yet on PyPI" note that was stale the moment it published).
+- README: documentation, examples, CONTRIBUTING, and LICENSE links are now
+  absolute GitHub URLs, so they resolve on the PyPI project page (relative
+  links resolved against pypi.org and 404'd).
+
+[0.1.1]: https://github.com/TomasrRodrigues/mcptune/releases/tag/v0.1.1
+
 ## [0.1.0] - tool-use fine-tuning pipeline
 
 Point MCPTune at an MCP server and a base model. It generates a synthetic tool-use dataset, fine-tunes the model to emit that server's tool calls and measures whether it learned them.

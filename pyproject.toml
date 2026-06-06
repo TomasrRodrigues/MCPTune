@@ -4,10 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcptune"
-version = "0.1.0"
+version = "0.1.1"
 license = "MIT"
 description = "MCP-based tool-use fine-tuning framework"
+readme = "README.md"
 requires-python = ">=3.10"
+authors = [{name = "Tomás Rodrigues"}]
+keywords = ["mcp", "llm", "fine-tuning", "tool-use", "lora"]
+urls = {Homepage = "https://github.com/TomasrRodrigues/mcptune", Repository = "https://github.com/TomasrRodrigues/mcptune"}
 
 dependencies = [
     "fastmcp>=2.0,<4",
