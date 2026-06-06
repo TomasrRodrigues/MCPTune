@@ -10,7 +10,7 @@ description = "MCP-based tool-use fine-tuning framework"
 requires-python = ">=3.10"
 
 dependencies = [
-    "fastmcp>=2.0",
+    "fastmcp>=2.0,<4",
 ]
 
 [project.optional-dependencies]
