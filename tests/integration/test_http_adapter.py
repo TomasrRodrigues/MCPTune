@@ -21,8 +21,8 @@ from fastmcp import FastMCP
 from mcptune.adapters.http import HTTPAdapter
 from mcptune.schema.tools import ToolSpec
 
-
 # --- server under test -----------------------------------------------------
+
 
 def _build_server() -> FastMCP:
     server = FastMCP("http-test")
@@ -94,6 +94,7 @@ def adapter(http_url):
 
 # --- discovery -------------------------------------------------------------
 
+
 @pytest.mark.integration
 async def test_discover_returns_toolspecs(adapter):
     tools = await adapter.discover_tools()
@@ -119,6 +120,7 @@ async def test_discover_normalizes_parameters(adapter):
 
 # --- call_tool: the normalized-contract assertions (mirror FastMCP tests) --
 
+
 @pytest.mark.integration
 async def test_call_tool_returns_normalized_contract(adapter):
     result = await adapter.call_tool("add", {"a": 2, "b": 3})
@@ -140,6 +142,7 @@ async def test_call_tool_string_result(adapter):
 
 
 # --- config plumbing -------------------------------------------------------
+
 
 @pytest.mark.integration
 async def test_headers_and_timeout_are_accepted(http_url):

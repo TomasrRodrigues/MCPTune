@@ -27,7 +27,7 @@ class HTTPAdapter(MCPAdapter):
         url: str,
         headers: dict[str, str] | None = None,
         timeout: float = 30.0,
-    )-> None:
+    ) -> None:
         """
         Parameters
             url:      Base URL of the HTTP-deployed MCP server.

@@ -23,10 +23,6 @@ class MCPAdapter(ABC):
         """Execute a tool call and return the normalized response dict."""
         ...
 
-
-
-
-
     # shared normalization (transport-agnostic)
 
     def _to_toolspec(self, tool: Any) -> ToolSpec:
