@@ -66,7 +66,7 @@ class FastMCPAdapter(MCPAdapter):
         No semantic interpretation is performed here.
         """
         async with Client(self.server) as client:
-            result = await client.call_tool(tool_name, arguments)
+            result = await client.call_tool(tool_name, arguments, raise_on_error=False)
 
         return self._normalize_response(result)
 

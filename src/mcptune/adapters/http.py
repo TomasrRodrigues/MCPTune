@@ -56,5 +56,5 @@ class HTTPAdapter(MCPAdapter):
 
     async def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         async with self._client() as client:
-            result = await client.call_tool(tool_name, arguments)
+            result = await client.call_tool(tool_name, arguments, raise_on_error=False)
         return self._normalize_response(result)
