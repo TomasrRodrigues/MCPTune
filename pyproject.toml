@@ -25,6 +25,8 @@ dev = [
     "hypothesis>=6.0",
     "ruff>=0.5",
     "mypy>=1.10",
+    "uvicorn>=0.30",
+    "httpx>=0.28",
 ]
 
 transformers = [

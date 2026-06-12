@@ -1,66 +1,65 @@
+# mcptune/adapters/base.py
 from abc import ABC, abstractmethod
 from typing import Any
 
-from mcptune.schema.tools import ToolSpec
+from mcptune.schema.tools import ToolParameter, ToolSpec
 
 
 class MCPAdapter(ABC):
-    """
-    Abstract interface for MCP (Model Context Protocol) transport adapters.
+    """Abstract interface for MCP transport adapters.
 
-    MCPAdapter defines the minimal contract required for MCPTune to:
-    - discover available tools from an MCP server
-    - execute tool calls against that server
-
-    This abstraction allows MCPTune to remain transport-agnostic:
-    implementations can use HTTP, SSE, stdio, or any custom protocol
-    without changing the dataset or training logic.
+    Subclasses implement transport (how to obtain a connected FastMCP
+    ``Client``); normalization of tools and responses is shared here so
+    every adapter produces an identical ToolSpec / response shape.
     """
 
     @abstractmethod
     async def discover_tools(self) -> list[ToolSpec]:
-        """
-        Retrieve all tools exposed by the MCP server.
-
-        Returns:
-            list[ToolSpec]
-                A structured list of tool definitions including:
-                - tool name
-                - description
-                - parameter schemas
-                - optional metadata
-
-        Notes:
-            This method is expected to be called once per session
-            during dataset construction or tool inspection.
-        """
-        pass
+        """Retrieve all tools exposed by the MCP server as ToolSpecs."""
+        ...
 
     @abstractmethod
     async def call_tool(self, tool_name: str, arguments: dict[Any, Any]) -> dict[str, Any]:
+        """Execute a tool call and return the normalized response dict."""
+        ...
+
+
+
+
+
+    # shared normalization (transport-agnostic)
+
+    def _to_toolspec(self, tool: Any) -> ToolSpec:
+        """Convert a FastMCP tool object into MCPTune's ToolSpec format."""
+        schema: Any = tool.inputSchema or {}
+        props = schema.get("properties", {})
+        required = schema.get("required", [])
+
+        parameters = [
+            ToolParameter(
+                name=name,
+                schema=props[name],
+                required=name in required,
+                description=props[name].get("description", ""),
+            )
+            for name in props
+        ]
+
+        return ToolSpec(
+            name=tool.name,
+            description=tool.description or "",
+            parameters=parameters,
+            raw_input_schema=schema,
+        )
+
+    def _normalize_response(self, result: Any) -> dict[str, Any]:
+        """Normalize a FastMCP CallToolResult into a transport-agnostic dict.
+
+        Output shape is fixed: ``content``, ``structured_content``,
+        ``is_error``. Every adapter returns exactly these keys.
         """
-        Execute a tool call against the MCP server.
-
-        Parameters:
-            tool_name:
-                Name of the tool to invoke.
-            arguments:
-                Dictionary of validated arguments matching the tool schema.
-
-        Returns:
-            dict
-                Raw response from the MCP server. The structure is
-                backend-specific but typically includes:
-                - result data
-                - metadata
-                - error information (if applicable)
-
-        Notes:
-            MCPTune does NOT assume:
-            - response format
-            - latency characteristics
-            - execution semantics
-
-        All interpretation of results happens in higher-level layers.
-        """
-        pass
+        return {
+            "content": [block.model_dump() for block in result.content],
+            "structured_content": result.structured_content,
+            "is_error": result.is_error,
+        }
