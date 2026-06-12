@@ -1,17 +1,16 @@
 from contextlib import asynccontextmanager
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from mcptune.adapters.stdio import StdioAdapter
 
-
 # --- construction (no mocking needed) --------------------------------------
+
 
 def test_defaults():
     a = StdioAdapter(server_path="/srv.py")
     assert a.server_path == "/srv.py"
     assert a.env == {}
+
 
 def test_env_stored():
     a = StdioAdapter(server_path="/srv.py", env={"K": "v"})
@@ -19,6 +18,7 @@ def test_env_stored():
 
 
 # --- _client builds the right transport ------------------------------------
+
 
 @patch("mcptune.adapters.stdio.PythonStdioTransport")
 @patch("mcptune.adapters.stdio.Client")
@@ -30,6 +30,7 @@ def test_client_builds_stdio_transport_with_env(mock_client, mock_transport):
 
 
 # --- discover_tools normalizes each tool -----------------------------------
+
 
 async def test_discover_tools_normalizes(monkeypatch):
     raw_tool = MagicMock()
@@ -51,6 +52,7 @@ async def test_discover_tools_normalizes(monkeypatch):
 
 # --- call_tool passes raise_on_error=False AND normalizes ------------------
 
+
 async def test_call_tool_passes_raise_on_error_false(monkeypatch):
     from unittest.mock import AsyncMock
 
@@ -60,7 +62,7 @@ async def test_call_tool_passes_raise_on_error_false(monkeypatch):
     result_obj.is_error = False
 
     fake = MagicMock()
-    fake.call_tool = AsyncMock(return_value=result_obj)   # records call args
+    fake.call_tool = AsyncMock(return_value=result_obj)  # records call args
 
     a = StdioAdapter(server_path="/srv.py")
     monkeypatch.setattr(a, "_client", lambda: _ctx(fake))
@@ -77,10 +79,13 @@ async def test_call_tool_passes_raise_on_error_false(monkeypatch):
 
 # --- helpers ---------------------------------------------------------------
 
+
 def _async_return(value):
     async def _fn(*args, **kwargs):
         return value
+
     return _fn
+
 
 @asynccontextmanager
 async def _ctx(client):

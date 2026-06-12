@@ -79,8 +79,6 @@ async def test_env_is_passed_to_subprocess():
     assert "secret123" in str(result["structured_content"]) + str(result["content"])
 
 
-
-
 # --- defaults (no subprocess) ----------------------------------------------
 
 
@@ -88,5 +86,3 @@ def test_defaults():
     a = StdioAdapter(server_path=SERVER)
     assert a.env == {}
     assert a.server_path == SERVER
-
-
